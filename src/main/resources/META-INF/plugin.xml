@@ -1,8 +1,8 @@
 <idea-plugin>
 
-    <id>org.nixos.idea</id>
-    <name>NixIDEA</name>
-    <vendor>NixOS</vendor>
+    <id>dev.johanness.nixos-idea-publication-testing</id>
+    <name>NixIDEA (Publication Testing)</name>
+    <vendor>johanness.dev</vendor>
 
     <idea-version since-build="202" />
 

@@ -4,6 +4,8 @@
 
 <!-- Plugin description -->
 
+**This is not the official NixIDEA plugin but a separate distribution to test publication process.**
+
 This plugin has the goal of being generally useful when working with nixpkgs/NixOS/nixops, it aims
 to provide the following:
 

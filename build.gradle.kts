@@ -129,7 +129,7 @@ tasks {
 
     publishPlugin {
         token(System.getenv("JETBRAINS_TOKEN"))
-        channels(pluginVersion.split('-').getOrElse(1) { "default" }.split('.').first())
+        channels(pluginVersion.split('-').getOrElse(1) { "private" }.split('.').first())
     }
 
 }
