@@ -138,4 +138,6 @@ tasks {
         channels(pluginVersion.split('-').getOrElse(1) { "default" }.split('.').first())
     }
 
+    apply(from = "gradle/tasks/bumpVersion.gradle.kts")
+
 }

@@ -1,0 +1,63 @@
+name: Bump Version
+
+on:
+  release:
+    types: [ published ]
+  workflow_dispatch:
+    inputs: {}
+
+jobs:
+  bump-version:
+
+    name: Bump version and update changelog
+    runs-on: ubuntu-latest
+
+    steps:
+    # Setup environment
+    - name: Checkout repository
+      uses: actions/checkout@v2
+    - name: Set up JDK 11
+      uses: actions/setup-java@v1
+      with:
+        java-version: 11
+    # Fail if this workflow is triggered on a different branch
+    - name: Verify branch
+      if: github.event_name == 'release'
+      run: |
+        if \
+          git fetch --depth=1 origin refs/heads/master && \
+          [ "$(git rev-parse refs/heads/master)" != "$(git rev-parse HEAD)" ]
+        then
+          msg="The release does not point to the master branch. This means the"
+          msg="$msg branch has been updated after the release or the release"
+          msg="$msg was created on a different branch. Please trigger this"
+          msg="$msg workflow manually on the right branch."
+          echo "::error::$msg"
+          exit 1
+        fi
+    # Setup cache
+    - name: Setup cache for Gradle and dependencies
+      uses: actions/cache@v2
+      with:
+        path: |
+          ~/.gradle/caches
+          ~/.gradle/wrapper
+        key: "gradle-\
+          ${{runner.os}}-\
+          ${{hashFiles('gradle/wrapper/gradle-wrapper.properties')}}-\
+          ${{hashFiles('**/*.gradle.kts')}}"
+    # Update files
+    - name: Update files with Gradle
+      run: ./gradlew --stacktrace metadataFiles bumpVersion
+    # Commit and push
+    - name: Commit files
+      run: |
+        version="$(cat build/metadata/version.txt)"
+        git config user.name 'github-actions[bot]'
+        git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+        git commit -m "Bump version after releasing $version" -a
+    - name: Push changes
+      env:
+        TARGET_BRANCH: ${{ github.event_name == 'release' && 'refs/heads/master' || github.ref }}
+      run: |
+        git push origin "HEAD:$TARGET_BRANCH"
