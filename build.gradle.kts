@@ -7,9 +7,9 @@ plugins {
     // Java support
     id("java")
     // gradle-intellij-plugin - read more: https://github.com/JetBrains/gradle-intellij-plugin
-    id("org.jetbrains.intellij") version "0.4.21"
+    id("org.jetbrains.intellij") version "0.6.2"
     // gradle-changelog-plugin - read more: https://github.com/JetBrains/gradle-changelog-plugin
-    id("org.jetbrains.changelog") version "0.4.0"
+    id("org.jetbrains.changelog") version "0.6.2"
     // grammarkit - read more: https://github.com/JetBrains/gradle-grammar-kit-plugin
     id("org.jetbrains.grammarkit") version "2020.1"
 }
@@ -53,12 +53,16 @@ grammarKit {
 
 tasks {
 
-    task("writeMetadataFiles") {
+    task("metadataFiles") {
         outputs.upToDateWhen { false }
         doLast {
-            project.buildDir.resolve("version.txt").writeText(pluginVersion)
-            project.buildDir.resolve("zipfile.txt").writeText(buildPlugin.get().archiveFile.get().toString())
-            project.buildDir.resolve("latest_changelog.md").writeText(changelog.getLatest().toText())
+            val dir = project.buildDir.resolve("metadata")
+            dir.mkdirs()
+            dir.resolve("version.txt").writeText(pluginVersion)
+            dir.resolve("zipfile.txt").writeText(buildPlugin.get().archiveFile.get().toString())
+            dir.resolve("latest_changelog.md").writeText(changelog.getLatest().toText())
+            dir.resolve("pluginVerifierIdeVersions.txt")
+                    .writeText(runPluginVerifier.get().ideVersions.joinToString(","))
         }
     }
 
