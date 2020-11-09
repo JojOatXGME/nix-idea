@@ -46,10 +46,9 @@ jobs:
     # Get Plugin Verifier metadata
     - name: Get metadata about Plugin Verifier
       id: metadata
-      shell: bash
       run: |
         ./gradlew --stacktrace metadataFiles
-        echo "::set-output name=ideVersions::$(cat build/metadata/pluginVerifierIdeVersions.txt | base64)"
+        echo "::set-output name=ideVersions::$(cat build/metadata/pluginVerifierIdeVersions.txt)"
         echo "::set-output name=pluginVerifierHomeDir::$HOME/.pluginVerifier"
     # Cache Plugin Verifier IDEs
     - name: Setup Plugin Verifier IDEs Cache
