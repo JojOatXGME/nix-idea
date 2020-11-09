@@ -50,7 +50,7 @@ jobs:
       run: |
         ./gradlew --stacktrace metadataFiles
         echo "::set-output name=ideVersions::$(cat build/metadata/pluginVerifierIdeVersions.txt | base64)"
-        echo "::set-output name=pluginVerifierHomeDir::~/.pluginVerifier"
+        echo "::set-output name=pluginVerifierHomeDir::$HOME/.pluginVerifier"
     # Cache Plugin Verifier IDEs
     - name: Setup Plugin Verifier IDEs Cache
       uses: actions/cache@v2
