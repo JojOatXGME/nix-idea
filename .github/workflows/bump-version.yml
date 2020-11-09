@@ -42,3 +42,20 @@ jobs:
     - name: Push changes
       run: |
         git push origin 'HEAD:${{ github.event.release.target_commitish }}'
+    - name: Create pull request if changes cannot be pushed
+      uses: actions/github-script@v3
+      with:
+        script: |
+          const pullRequest = await github.pulls.create({
+            title: 'Bump version after releasing ${{ github.event.release.name }}',
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            head: ,
+            base: master,
+          });
+          await github.issues.addAssignees({
+            issue_number: pullRequest.number,
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            assignees: context.actor,
+          });
