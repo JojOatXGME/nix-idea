@@ -39,7 +39,7 @@ jobs:
       env:
         VERSION: ${{ github.event.release.name }}
       run: |
-        git -c user.name='github-actions' -c user.email='github-actions@github.com' \
+        git -c user.name='github-actions[bot]' -c user.email='41898282+github-actions[bot]@users.noreply.github.com' \
           commit -am "Bump version after releasing $VERSION"
     - name: Push changes
       env:
