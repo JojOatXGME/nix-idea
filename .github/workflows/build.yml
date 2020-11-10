@@ -128,15 +128,15 @@ jobs:
         echo "::set-output name=zipname::$(basename "$(cat build/metadata/zipfile.txt)")"
     # Fail job if the release tag already exists and points to a different commit
     - name: Check release tag
-      env:
-        TAG_NAME: v${{ steps.metadata.outputs.version }}
-        COMMITISH: ${{ github.sha }}
       run: |
+        tag_name="v$(cat build/metadata/version.txt)"
         if \
-          git fetch --depth=1 origin tag "$TAG_NAME" && \
-          [ "$(git rev-parse "$TAG_NAME")" != "$(git rev-parse "$COMMITISH")" ]
+          git fetch --depth=1 origin tag "$tag_name" && \
+          [ "$(git rev-parse "$tag_name")" != "$(git rev-parse HEAD)" ]
         then
-          echo "::error::Tag '$TAG_NAME' already exists but points to a different commit"
+          msg="Tag '$tag_name' already exists but points to a different commit."
+          msg="$msg You probably need to bump the version number."
+          echo "::error::$msg"
           exit 1
         fi
     # Create GitHub release draft
