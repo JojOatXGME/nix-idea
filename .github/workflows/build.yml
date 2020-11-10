@@ -43,6 +43,17 @@ jobs:
           ${{runner.os}}-\
           ${{hashFiles('gradle/wrapper/gradle-wrapper.properties')}}-\
           ${{hashFiles('**/*.gradle.kts')}}"
+    # Create metadata files
+    - name: Write metadata files
+      run: ./gradlew --stacktrace metadataFiles
+    # Cache Plugin Verifier IDEs
+    - name: Setup Plugin Verifier IDEs Cache
+      uses: actions/cache@v2
+      with:
+        path: ~/.pluginVerifier/ides
+        key: "plugin-verifier-\
+          ${{ runner.os }}-\
+          ${{ hashFiles('build/metadata/pluginVerifierIdeVersions.txt') }}"
     # Build and test
     - name: Build project
       run: ./gradlew --stacktrace assemble
@@ -50,6 +61,8 @@ jobs:
       run: ./gradlew --stacktrace check
     - name: Run :verifyPlugin
       run: ./gradlew --stacktrace verifyPlugin
+    - name: Run :runPluginVerifier
+      run: ./gradlew --stacktrace runPluginVerifier "-Pplugin.verifier.home.dir=$HOME/.pluginVerifier"
     # Upload artifacts
     - name: Upload build reports
       if: always()
