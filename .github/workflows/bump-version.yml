@@ -41,4 +41,5 @@ jobs:
           commit -am "Bump version after releasing ${{ github.event.release.name }}"
     - name: Push changes
       run: |
-        git push origin 'HEAD:${{ github.event.release.target_commitish }}'
+        git push origin --force-with-lease=refs/heads/master:${{ github.sha }} \
+          'HEAD:refs/heads/master'
