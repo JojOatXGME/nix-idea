@@ -53,12 +53,14 @@ grammarKit {
 
 tasks {
 
-    task("writeMetadataFiles") {
+    task("metadataFiles") {
         outputs.upToDateWhen { false }
         doLast {
-            project.buildDir.resolve("version.txt").writeText(pluginVersion)
-            project.buildDir.resolve("zipfile.txt").writeText(buildPlugin.get().archiveFile.get().toString())
-            project.buildDir.resolve("latest_changelog.md").writeText(changelog.getLatest().toText())
+            val dir = project.buildDir.resolve("metadata")
+            dir.mkdirs()
+            dir.resolve("version.txt").writeText(pluginVersion)
+            dir.resolve("zipfile.txt").writeText(buildPlugin.get().archiveFile.get().toString())
+            dir.resolve("latest_changelog.md").writeText(changelog.getLatest().toText())
         }
     }
 
