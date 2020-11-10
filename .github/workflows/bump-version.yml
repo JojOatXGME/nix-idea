@@ -36,10 +36,14 @@ jobs:
       run: ./gradlew --stacktrace patchChangelog
     # Commit and push files
     - name: Commit files
+      env:
+        VERSION: ${{ github.event.release.name }}
       run: |
         git -c user.name='github-actions' -c user.email='github-actions@github.com' \
-          commit -am "Bump version after releasing ${{ github.event.release.name }}"
+          commit -am "Bump version after releasing $VERSION"
     - name: Push changes
+      env:
+        BASE_COMMIT: ${{ github.sha }}
       run: |
-        git push origin --force-with-lease=refs/heads/master:${{ github.sha }} \
+        git push origin --force-with-lease=refs/heads/master:$BASE_COMMIT \
           'HEAD:refs/heads/master'
