@@ -8,6 +8,10 @@
 
     <extensions defaultExtensionNs="com.intellij">
 
+        <annotator
+                language="Nix"
+                implementationClass="org.nixos.idea.lang.NixAnnotator" />
+
         <fileType
                 name="Nix file"
                 implementationClass="org.nixos.idea.file.NixFileType"
