@@ -1,3 +1,4 @@
+[
 "
   first
   second
@@ -8,3 +9,4 @@
   second
   third
 ''
+]

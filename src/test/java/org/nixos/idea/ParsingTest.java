@@ -34,6 +34,10 @@ public final class ParsingTest extends ParsingTestCase {
     doTest(true);
   }
 
+  public void testIdentifier() {
+    doTest(true);
+  }
+
   public void testIf() {
     doTest(true);
   }
@@ -46,6 +50,10 @@ public final class ParsingTest extends ParsingTestCase {
     doTest(true);
   }
 
+  public void testListWithFunction() {
+    doTest(true);
+  }
+
   public void testNull() {
     doTest(true);
   }
@@ -54,7 +62,6 @@ public final class ParsingTest extends ParsingTestCase {
     doTest(true);
   }
 
-  // todo Remove one of both approaches
   public void testOperators() {
     doTest(true);
   }

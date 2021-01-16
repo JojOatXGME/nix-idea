@@ -2,6 +2,7 @@
   x = 123;
   "< y >" = "Hello";
   ${key} = ./.;
-  inherit x y z;
-  inherit (src-set) a b c;
+  inherit a;
+  inherit b c;
+  inherit (src-set) d e f;
 }

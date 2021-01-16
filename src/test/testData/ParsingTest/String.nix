@@ -1,2 +1,4 @@
+[
 "expected"
 ''expected''
+]
