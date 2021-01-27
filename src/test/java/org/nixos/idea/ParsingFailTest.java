@@ -23,6 +23,10 @@ public final class ParsingFailTest extends ParsingTestCase {
     doTest(true);
   }
 
+  public void testListWithInvalidItem() {
+    doTest(true);
+  }
+
   @Override
   protected String getTestDataPath() {
     return "src/test/testData";
