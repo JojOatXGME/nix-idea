@@ -12,6 +12,8 @@ plugins {
     id("org.jetbrains.changelog") version "0.6.2"
     // grammarkit - read more: https://github.com/JetBrains/gradle-grammar-kit-plugin
     id("org.jetbrains.grammarkit") version "2020.3.2"
+    // Java Microbenchmark Harness - read more: https://github.com/melix/jmh-gradle-plugin
+    id ("me.champeau.gradle.jmh") version "0.5.2"
 }
 
 // Import variables from gradle.properties file
@@ -74,6 +76,21 @@ sourceSets {
             srcDir("src/main/java")
         }
     }
+//    register("benchmark") {
+//        compileClasspath += main.get().output
+//        runtimeClasspath += main.get().output
+//        configurations[apiElementsConfigurationName].extendsFrom(
+//                configurations[main.get().apiElementsConfigurationName])
+//        configurations[runtimeElementsConfigurationName].extendsFrom(
+//                configurations[main.get().runtimeElementsConfigurationName])
+//    }
+}
+
+jmh {
+    isZip64 = true
+    duplicateClassesStrategy = DuplicatesStrategy.EXCLUDE
+    // See https://github.com/melix/jmh-gradle-plugin/issues/137
+    jvmArgs = listOf("-Djmh.separateClasspathJAR=true")
 }
 
 tasks {
@@ -100,6 +117,7 @@ tasks {
         pathToParser = "/org/nixos/idea/lang/NixParser"
         pathToPsiRoot = "/org/nixos/idea/psi"
         purgeOldFiles = true
+        outputs.upToDateWhen { false }
     }
 
     compileJava {
@@ -109,6 +127,10 @@ tasks {
     test {
         useJUnitPlatform()
     }
+
+//    jmhJar {
+//        exclude("META-INF/versions/9/module-info.class")
+//    }
 
     patchPluginXml {
         version(pluginVersion)
