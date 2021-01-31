@@ -90,7 +90,7 @@ tasks {
     val generateNixLexer by registering(GenerateLexer::class) {
         source = "src/main/lang/Nix.flex"
         targetDir = "src/gen/java/org/nixos/idea/lang"
-        targetClass = "NixLexer"
+        targetClass = "_NixLexer"
         purgeOldFiles = true
     }
 
