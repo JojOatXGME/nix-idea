@@ -1,7 +1,6 @@
 import org.jetbrains.changelog.closure
 import org.jetbrains.changelog.markdownToHTML
 import org.jetbrains.grammarkit.tasks.GenerateLexer
-import org.jetbrains.grammarkit.tasks.GenerateParser
 
 plugins {
     // Java support
@@ -32,9 +31,12 @@ version = pluginVersion
 // Configure project's dependencies
 repositories {
     mavenCentral()
+    maven { url = uri("https://github.com/JojOatXGME/Grammar-Kit-Annotation-Processor/raw/maven-repository") }
 }
 
 dependencies {
+    annotationProcessor("dev.johanness:grammar-kit-annotation-processor:0.1.0")
+
     testImplementation(platform("org.junit:junit-bom:5.7.0"))
     testImplementation("org.junit.jupiter:junit-jupiter")
     testRuntimeOnly("org.junit.vintage:junit-vintage-engine")
@@ -80,23 +82,30 @@ tasks {
         purgeOldFiles = true
     }
 
-    task<GenerateParser>("generateNixParser") {
-        source = "src/main/lang/Nix.bnf"
-        targetRoot = "src/gen/java"
-        pathToParser = "/org/nixos/idea/lang/NixParser"
-        pathToPsiRoot = "/org/nixos/idea/psi"
-        purgeOldFiles = true
+    compileJava {
+        val bnfFiles = files("src/main/lang/Nix.bnf")
+        inputs.files(bnfFiles)
+        options.compilerArgs.addAll(listOf(
+            "-Aparser=${bnfFiles.asPath}"
+        ))
     }
+//    task<GenerateParser>("generateNixParser") {
+//        source = "src/main/lang/Nix.bnf"
+//        targetRoot = "src/gen/java"
+//        pathToParser = "/org/nixos/idea/lang/NixParser"
+//        pathToPsiRoot = "/org/nixos/idea/psi"
+//        purgeOldFiles = true
+//    }
 
     // Set the compatibility versions to 1.8
     withType<JavaCompile> {
         dependsOn(
-                "generateNixLexer",
-                "generateNixParser"
+                "generateNixLexer"
+//                "generateNixParser"
         )
 
-        sourceCompatibility = "1.8"
-        targetCompatibility = "1.8"
+        sourceCompatibility = "11"
+        targetCompatibility = "11"
 
         sourceSets {
             // srcDir "path" appends to the default src/main/java (etc), as opposed to main.java.srcDir = xyz which would override the defaults

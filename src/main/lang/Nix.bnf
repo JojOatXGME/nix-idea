@@ -7,6 +7,7 @@
   psiImplClassSuffix="Impl"
   psiPackage="org.nixos.idea.psi"
   psiImplPackage="org.nixos.idea.psi.impl"
+  psiImplUtilClass="org.nixos.idea.psi.impl.NixPsiImplUtil"
 
   elementTypeHolderClass="org.nixos.idea.psi.NixTypes"
   elementTypeClass="org.nixos.idea.psi.NixElementType"
@@ -76,7 +77,7 @@
 nixFile ::= expr
 
 ;{ extends("expr_.*")=expr }
-expr ::= <<parseNonBindValue expr0>>
+expr ::= <<parseNonBindValue expr0>> { methods=[getReferences someTest] }
 private expr0 ::=
     expr_assert
   | expr_if
