@@ -1,0 +1,10 @@
+<idea-plugin>
+    <depends optional="true" config-file="nix-idea-shell-java.xml">com.intellij.java</depends>
+
+    <extensions defaultExtensionNs="com.intellij">
+        <runConfigurationExtension implementation="" />
+    </extensions>
+    <extensions defaultExtensionNs="Pythonid">
+        <runConfigurationExtension implementation="" />
+    </extensions>
+</idea-plugin>

@@ -48,6 +48,11 @@ intellij {
     version.set(platformVersion)
     type.set(platformType)
     updateSinceUntilBuild.set(true)
+    plugins.set(listOf(
+        "Pythonid:211.7628.24",
+        "com.intellij.java",
+        "com.jetbrains.php:211.7628.25",
+    ))
 }
 
 changelog {
