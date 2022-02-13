@@ -48,6 +48,7 @@ intellij {
     version.set(platformVersion)
     type.set(platformType)
     updateSinceUntilBuild.set(true)
+    plugins.set(listOf("com.intellij.java"))
 }
 
 changelog {

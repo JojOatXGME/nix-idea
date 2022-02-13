@@ -5,8 +5,14 @@
     <vendor>NixOS</vendor>
 
     <depends>com.intellij.modules.lang</depends>
+    <depends>com.intellij.java</depends>
 
     <extensions defaultExtensionNs="com.intellij">
+
+<!--        <programRunner implementation="org.nixos.idea.shell.NixProgramRunner" order="first"/>-->
+        <executionTargetProvider implementation="org.nixos.idea.shell.NixExecutionTargetProvider"/>
+        <executionTargetType implementation="org.nixos.idea.shell.NixTargetEnvironmentType"/>
+        <runConfigurationExtension implementation="org.nixos.idea.shell.NixRunConfigurationExtension"/>
 
         <fileType
                 name="Nix file"
