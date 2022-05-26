@@ -81,11 +81,11 @@ dependencies {
 intellijPlatform {
     projectName = pluginName
     pluginConfiguration {
-        id = "nix-idea"
-        name = "NixIDEA"
+        id = "dev.johanness.nixos-idea-publication-testing"
+        name = "NixIDEA (Publication Testing)"
         version = pluginVersion
         vendor {
-            name = "NixOS"
+            name = "johanness.dev"
         }
         ideaVersion {
             sinceBuild = pluginSinceBuild
@@ -139,7 +139,7 @@ intellijPlatform {
         channels = pluginVersion
             .map { it.split('-').getOrNull(1) }
             .map { listOf(it.split('.')[0]) }
-            .orElse(listOf("default"))
+            .orElse(listOf("private"))
     }
 }
 
