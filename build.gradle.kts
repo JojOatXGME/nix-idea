@@ -69,11 +69,11 @@ dependencies {
 intellijPlatform {
     projectName = pluginName
     pluginConfiguration {
-        id = "nix-idea"
-        name = "NixIDEA"
+        id = "dev.johanness.nixos-idea-publication-testing"
+        name = "NixIDEA (Publication Testing)"
         version = pluginVersion
         vendor {
-            name = "NixOS"
+            name = "johanness.dev"
         }
         ideaVersion {
             sinceBuild = pluginSinceBuild
@@ -124,7 +124,7 @@ intellijPlatform {
         token = providers.environmentVariable("JETBRAINS_TOKEN")
         // Note: `listOf("foo").first()` does not what you think on Java 21 and Gradle 8.6. (The return type is TaskProvider<Task>)
         // See https://github.com/gradle/gradle/issues/27699 and https://youtrack.jetbrains.com/issue/KT-65235.
-        channels = listOf(pluginVersion.split('-').getOrElse(1) { "default" }.split('.')[0])
+        channels = listOf(pluginVersion.split('-').getOrElse(1) { "private" }.split('.')[0])
     }
 }
 

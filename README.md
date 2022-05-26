@@ -1,9 +1,11 @@
 # NixIDEA - A Nix language plugin for IntelliJ IDEA
 
-[![Build Status](https://github.com/NixOS/nix-idea/actions/workflows/build-main-branch.yml/badge.svg)][build-status]
-[![Version](https://img.shields.io/jetbrains/plugin/v/nix-idea)][marketplace]
+[![Build Status](https://github.com/JojOatXGME/nix-idea/actions/workflows/build-main-branch.yml/badge.svg)][build-status]
+[![Version](https://img.shields.io/jetbrains/plugin/v/dev.johanness.nixos-idea-publication-testing)][marketplace]
 
 <!-- Plugin description -->
+
+**This is not the official NixIDEA plugin but a separate distribution to test the publication process.**
 
 This plugin has the goal of being generally useful when working with nixpkgs/NixOS/nixops.
 It currently adds support for the Nix language.
@@ -77,10 +79,10 @@ at [NixOS/nixos-artwork](https://github.com/NixOS/nixos-artwork/tree/master/logo
 The variants used by this plugin may have been modified to comply with JetBrains' Guidelines.
 
 [build-status]:
-<https://github.com/NixOS/nix-idea/actions/workflows/build.yml?query=branch%3Amaster>
+<https://github.com/JojOatXGME/nix-idea/actions/workflows/build.yml?query=branch%3Amaster>
 "Latest builds at GitHub Actions"
 [marketplace]:
-<https://plugins.jetbrains.com/plugin/8607-nixidea/>
+<https://plugins.jetbrains.com/plugin/15328-nixidea-publication-testing->
 "NixIDEA on JetBrains Marketplace"
 [releases]:
 <https://github.com/NixOS/nix-idea/releases>
