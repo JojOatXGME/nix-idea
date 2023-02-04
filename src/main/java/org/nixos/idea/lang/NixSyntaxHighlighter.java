@@ -102,7 +102,8 @@ public class NixSyntaxHighlighter extends SyntaxHighlighterBase {
     @Override
     public TextAttributesKey @NotNull [] getTokenHighlights(IElementType tokenType) {
         {
-            if (tokenType == NixTypes.PARAM) return PARAMETER_KEYS;
+            if (tokenType == NixTypes.PARAM_NAME) return PARAMETER_KEYS;
+            if (tokenType == NixTypes.PARAM_ATTR) return PARAMETER_KEYS;
             if (tokenType == NixTypes.EXPR_LAMBDA) return FUNCTION_KEYS;
             if (tokenType == NixTypes.COMMA) return COMMA_KEYS;
             if (tokenType == NixTypes.SEMI) return SEMI_KEYS;
