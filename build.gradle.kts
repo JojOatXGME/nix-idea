@@ -11,6 +11,8 @@ plugins {
     id("org.jetbrains.changelog") version "1.3.1"
     // grammarkit - read more: https://github.com/JetBrains/gradle-grammar-kit-plugin
     id("org.jetbrains.grammarkit") version "2021.2.2"
+    id("bumpVersion")
+    id("downloadReference")
 }
 
 // Import variables from gradle.properties file
@@ -177,5 +179,3 @@ tasks {
     }
 
 }
-
-apply(from = "gradle/bumpVersion.gradle.kts")
