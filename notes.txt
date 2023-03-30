@@ -1,0 +1,2 @@
+Debugger:
+https://nixos.org/manual/nix/stable/release-notes/rl-2.9.html
