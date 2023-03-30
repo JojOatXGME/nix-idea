@@ -182,6 +182,10 @@ tasks {
         channels.set(listOf(pluginVersion.split('-').getOrElse(1) { "default" }.split('.').first()))
     }
 
+    runIde {
+        jvmArgs("-Didea.max.intellisense.filesize=20000", "-Xmx4G")
+    }
+
 }
 
 apply(from = "gradle/bumpVersion.gradle.kts")
