@@ -1,0 +1,12 @@
+---
+
+TODO Introduce Plugin Signing
+  https://plugins.jetbrains.com/docs/intellij/plugin-signing.html
+  https://docs.github.com/de/actions/deployment/targeting-different-environments/using-environments-for-deployment
+
+TODO Use enableFeaturePreview("TYPESAFE_PROJECT_ACCESSORS")
+TODO Use the org.gradlex.build-parameters plugin
+  https://github.com/junit-team/junit5/pull/3155
+  https://github.com/junit-team/junit5/pull/3170
+
+Interesting: https://github.com/JetBrains/plugin-repository-rest-client
