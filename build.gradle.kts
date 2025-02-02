@@ -58,6 +58,8 @@ dependencies {
     testImplementation(libs.junit4)
     testRuntimeOnly(libs.junit5.vintage.engine)
 
+    testImplementation(group = "org.jetbrains.intellij.plugins", name = "verifier-cli", version = "1.381"/*, classifier = "all", ext = "jar"*/)
+
     intellijPlatform {
         create(platformType, platformVersion)
         testFramework(TestFrameworkType.Platform)
@@ -120,6 +122,7 @@ intellijPlatform {
                     .orElse(ProductReleasesValueSource())
             )
         }
+        ignoredProblemsFile = layout.projectDirectory.file("ignored-problems.txt")
     }
     publishing {
         token = providers.environmentVariable("JETBRAINS_TOKEN")

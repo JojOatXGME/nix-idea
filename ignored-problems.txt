@@ -1,0 +1,3 @@
+// DOES NOT SEEM TO WORK, it looks like only compatibility problems can be whitelisted
+// Probably unintended @OverrideOnly - https://youtrack.jetbrains.com/issue/IJPL-176605
+nix-idea::Invocation of override-only method com.intellij.model.search.LeafOccurrenceMapper.withPointer.*
