@@ -31,12 +31,12 @@ java {
     // https://github.com/gradle/gradle/issues/16256 - Ability to set a min language version for a toolchain
     // https://github.com/gradle/gradle/issues/17444 - Toolchains feature does not appear to treat Java as backwards compatible
     // https://github.com/gradle/gradle/issues/18894 - More flexibility in querying Java toolchains
-    sourceCompatibility = JavaVersion.VERSION_17
+    sourceCompatibility = JavaVersion.VERSION_21
 }
 
 kotlin {
     compilerOptions {
-        jvmTarget.set(JvmTarget.JVM_17)
+        jvmTarget.set(JvmTarget.JVM_21)
     }
 }
 
@@ -59,8 +59,16 @@ dependencies {
 
     intellijPlatform {
         create(platformType, platformVersion)
+        bundledModule("intellij.spellchecker")
         testFramework(TestFrameworkType.Platform)
         //testFramework(TestFrameworkType.JUnit5)
+
+        // version of IntelliJ patched JFlex
+        // -> https://github.com/JetBrains/intellij-deps-jflex
+        jflex("1.9.2")
+        // tag or short commit hash of Grammar-Kit to use
+        // -> https://github.com/JetBrains/Grammar-Kit
+        grammarKit("2023.3")
     }
 }
 
@@ -107,7 +115,7 @@ intellijPlatform {
     pluginVerification {
         freeArgs = listOf("-mute", "TemplateWordInPluginName")
         ides {
-            ides(
+            create(
                 providers.gradleProperty("verifierIdeVersionOverride")
                     // Verify only against the IDE specified by the property
                     .map { listOf(it) }
@@ -134,16 +142,6 @@ changelog {
     // Workarounds because our version numbers do not match the format of semantic versioning:
     headerParserRegex = "^[-._+0-9a-zA-Z]+\$"
     combinePreReleases = false
-}
-
-grammarKit {
-    // version of IntelliJ patched JFlex
-    // -> https://github.com/JetBrains/intellij-deps-jflex
-    jflexRelease = "1.9.2"
-
-    // tag or short commit hash of Grammar-Kit to use
-    // -> https://github.com/JetBrains/Grammar-Kit
-    grammarKitRelease = "2022.3.2"
 }
 
 val lexerSource = layout.buildDirectory.dir("generated/sources/lexer/java/main")

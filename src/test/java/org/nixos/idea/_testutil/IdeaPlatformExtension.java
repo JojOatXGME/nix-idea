@@ -15,20 +15,18 @@ import com.intellij.testFramework.fixtures.IdeaTestFixtureFactory;
 import org.junit.jupiter.api.Named;
 import org.junit.jupiter.api.extension.ExtensionContext;
 import org.junit.jupiter.api.extension.ExtensionContext.Namespace;
-import org.junit.jupiter.api.extension.ExtensionContext.Store.CloseableResource;
 import org.junit.jupiter.api.extension.ParameterContext;
 import org.junit.jupiter.api.extension.ParameterResolutionException;
 import org.junit.jupiter.api.extension.ParameterResolver;
 import org.junit.jupiter.api.extension.TestInstanceFactoryContext;
 import org.junit.jupiter.api.extension.TestInstancePreConstructCallback;
-import org.junit.jupiter.api.extension.TestInstancePreDestroyCallback;
 import org.junit.platform.commons.support.AnnotationSupport;
 
 import java.util.Map;
 import java.util.Objects;
 import java.util.function.Function;
 
-final class IdeaPlatformExtension implements ParameterResolver, TestInstancePreConstructCallback, TestInstancePreDestroyCallback {
+final class IdeaPlatformExtension implements ParameterResolver, TestInstancePreConstructCallback {
 
     private static final Namespace NAMESPACE = Namespace.create(IdeaPlatformExtension.class);
     private static final Named<?> KEY_FIXTURE = Named.of("KEY_FIXTURE", new Object());
@@ -44,6 +42,12 @@ final class IdeaPlatformExtension implements ParameterResolver, TestInstancePreC
     );
 
     @Override
+    public ExtensionContextScope getTestInstantiationExtensionContextScope(ExtensionContext rootContext) {
+        // Ensure FixtureClosableWrapper is closed immediately after the test.
+        return ExtensionContextScope.TEST_METHOD;
+    }
+
+    @Override
     public void preConstructTestInstance(TestInstanceFactoryContext factoryContext, ExtensionContext context) throws Exception {
         FixtureClosableWrapper existing = context.getStore(NAMESPACE).get(KEY_FIXTURE, FixtureClosableWrapper.class);
         if (existing == null) {
@@ -51,23 +55,6 @@ final class IdeaPlatformExtension implements ParameterResolver, TestInstancePreC
             context.getStore(NAMESPACE).put(KEY_FIXTURE_CLOSABLE, Boolean.TRUE);
         } else {
             context.getStore(NAMESPACE).put(KEY_FIXTURE, existing);
-        }
-    }
-
-    @Override
-    public void preDestroyTestInstance(ExtensionContext context) throws Exception {
-        // Unfortunately, the ExtensionContext given to `preConstructTestInstance` is not scoped to the individual test.
-        // We therefore must clean up the context manually.
-        // https://github.com/junit-team/junit5/issues/3445
-        FixtureClosableWrapper wrapper;
-        while (context != null) {
-            wrapper = context.getStore(NAMESPACE).remove(KEY_FIXTURE, FixtureClosableWrapper.class);
-            if (wrapper != null) {
-                if (context.getStore(NAMESPACE).remove(KEY_FIXTURE_CLOSABLE, Boolean.class) == Boolean.TRUE) {
-                    wrapper.close();
-                }
-            }
-            context = context.getParent().orElse(null);
         }
     }
 
@@ -109,7 +96,7 @@ final class IdeaPlatformExtension implements ParameterResolver, TestInstancePreC
         return Map.entry(type, resolver);
     }
 
-    private static final class FixtureClosableWrapper implements CloseableResource {
+    private static final class FixtureClosableWrapper implements AutoCloseable {
         private final IdeaProjectTestFixture myFixture;
 
         private FixtureClosableWrapper(ExtensionContext context) throws Exception {
@@ -117,7 +104,7 @@ final class IdeaPlatformExtension implements ParameterResolver, TestInstancePreC
             IdeaTestFixtureFactory factory = IdeaTestFixtureFactory.getFixtureFactory();
             IdeaProjectTestFixture baseFixture = factory.createLightFixtureBuilder(testName).getFixture();
             myFixture = AnnotationSupport.findAnnotation(context.getTestMethod(), WithIdeaPlatform.CodeInsight.class)
-                    .or(() -> AnnotationSupport.findAnnotation(context.getTestClass(), WithIdeaPlatform.CodeInsight.class))
+                    .or(() -> AnnotationSupport.findAnnotation(context.getRequiredTestClass(), WithIdeaPlatform.CodeInsight.class, context.getEnclosingTestClasses()))
                     .<IdeaProjectTestFixture>map(annotation -> {
                         IdeaTestExecutionPolicy policy = Objects.requireNonNull(IdeaTestExecutionPolicy.current());
                         CodeInsightTestFixture fixture = factory.createCodeInsightFixture(baseFixture, policy.createTempDirTestFixture());
