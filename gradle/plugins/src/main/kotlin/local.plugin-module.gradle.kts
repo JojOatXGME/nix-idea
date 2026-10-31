@@ -1,4 +1,5 @@
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
+import org.jetbrains.intellij.platform.gradle.tasks.ComposedJarTask
 
 /*
  * Convention plugin for the content modules of the plugin (see settings.gradle.kts).
@@ -37,7 +38,7 @@ dependencies {
 tasks {
     // The name of the jar file must match the name of the content module, which is "nix-idea.<project path>".
     // By default, the IntelliJ Platform Gradle Plugin would use "<root project name>.<project path>".
-    named<Jar>("composedJar") {
+    named<ComposedJarTask>("composedJar") {
         archiveBaseName = "nix-idea." + project.path.removePrefix(":").replace(':', '.')
     }
     withType<JavaCompile>().configureEach {
