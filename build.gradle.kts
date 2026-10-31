@@ -228,6 +228,8 @@ tasks {
     }
 
     test {
+        // Fail fast instead of hanging until the CI job is cancelled
+        timeout = java.time.Duration.ofMinutes(10)
         val testDataPath = rootProject.rootDir.resolve("src/test/testData").path
         inputs.dir(testDataPath).withPathSensitivity(PathSensitivity.RELATIVE)
 
