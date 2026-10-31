@@ -1,4 +1,13 @@
+<!--
+  Descriptor of the content module "nix-idea.lsp".
+  The module is optional and only loaded if the IDE provides the LSP API.
+  -->
 <idea-plugin>
+    <dependencies>
+        <module name="nix-idea.core"/>
+        <plugin id="com.intellij.modules.lsp"/>
+    </dependencies>
+
     <extensions defaultExtensionNs="com.intellij">
 
         <applicationService

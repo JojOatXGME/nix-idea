@@ -1,3 +1,4 @@
+import java.time.Duration
 import org.jetbrains.changelog.Changelog
 import org.jetbrains.changelog.markdownToHTML
 import org.jetbrains.intellij.platform.gradle.IntelliJPlatformType
@@ -9,7 +10,7 @@ plugins {
     kotlin("jvm") version embeddedKotlinVersion
     alias(libs.plugins.jetbrains.changelog)
     alias(libs.plugins.jetbrains.intellij.platform)
-    alias(libs.plugins.jetbrains.intellij.grammarkit)
+    alias(libs.plugins.jetbrains.intellij.grammarkit) apply false
     id("local.bump-version")
     id("local.jbr-guidance")
 }
@@ -63,16 +64,12 @@ dependencies {
 
     intellijPlatform {
         create(platformType, platformVersion)
-        bundledModule("intellij.spellchecker")
         testFramework(TestFrameworkType.Platform)
         //testFramework(TestFrameworkType.JUnit5)
 
-        // version of IntelliJ patched JFlex
-        // -> https://github.com/JetBrains/intellij-deps-jflex
-        jflex("1.10.17")
-        // tag or short commit hash of Grammar-Kit to use
-        // -> https://github.com/JetBrains/Grammar-Kit
-        grammarKit("2023.3.4")
+        // Content modules, packaged into lib/modules/ of the plugin distribution
+        pluginModule(implementation(project(":core")))
+        pluginModule(implementation(project(":lsp")))
     }
 }
 
@@ -151,15 +148,6 @@ changelog {
     combinePreReleases = false
 }
 
-sourceSets {
-    main {
-        java {
-            srcDir(tasks.generateLexer.flatMap { it.targetRootOutputDir })
-            srcDir(tasks.generateParser.flatMap { it.targetRootOutputDir })
-        }
-    }
-}
-
 tasks {
 
     intellijPlatformTesting.runIde.register("runIntellij") {
@@ -204,30 +192,15 @@ tasks {
         )
     }
 
-    generateLexer {
-        sourceFile = layout.projectDirectory.file("src/main/lang/Nix.flex")
-        pathToClass = "org/nixos/idea/lang/_NixLexer.java"
-    }
-
-    generateParser {
-        sourceFile = layout.projectDirectory.file("src/main/lang/Nix.bnf")
-        // Maybe we can remove the following properties in the future
-        // https://github.com/JetBrains/gradle-grammar-kit-plugin/issues/178
-        pathToParser = "org/nixos/idea/lang/NixParser.java"
-        pathToPsiRoot = "org/nixos/idea/psi"
-    }
-
-    compileJava {
-        dependsOn(generateLexer)
-        dependsOn(generateParser)
-    }
-
-    compileKotlin {
-        dependsOn(generateLexer)
-        dependsOn(generateParser)
+    prepareTestSandbox {
+        // The bundled Vue.js plugin fails in tests since 2025.3: its LSP support cannot find its bundled
+        // language server (ExceptionInInitializerError in VueServices.kt), which fails many of our tests.
+        disabledPlugins.add("org.jetbrains.plugins.vue")
     }
 
     test {
+        // Fail instead of hanging until the CI job is cancelled
+        timeout = Duration.ofMinutes(10)
         val testDataPath = rootProject.rootDir.resolve("src/test/testData").path
         inputs.dir(testDataPath).withPathSensitivity(PathSensitivity.RELATIVE)
 

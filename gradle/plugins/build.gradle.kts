@@ -8,6 +8,7 @@ repositories {
 
 dependencies {
     implementation(plugin(libs.plugins.jetbrains.intellij.platform))
+    implementation(embeddedKotlin("gradle-plugin"))
 }
 
 /**
