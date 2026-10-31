@@ -34,6 +34,10 @@ import java.nio.file.Path
  */
 class NixFlakeProjectTaskRunner : ProjectTaskRunner() {
 
+    // Still abstract in 2025.2, but obsolete and never called by the platform. Newer platform versions removed the abstractness.
+    @Deprecated("Obsolete since 2023.3")
+    override fun canRun(projectTask: ProjectTask): Boolean = false
+
     override fun canRun(project: Project, projectTask: ProjectTask, context: ProjectTaskContext?): Boolean {
         if (projectTask !is ModuleBuildTask) return false
         val entity = project.workspaceModel.currentSnapshot.resolve(ModuleId(projectTask.module.name)) ?: return false
