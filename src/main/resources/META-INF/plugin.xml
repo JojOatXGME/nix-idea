@@ -1,93 +1,18 @@
 <idea-plugin>
+    <!--
+      NixIDEA uses the modular plugin format (plugin model v2).
+      All extensions are registered in the descriptors of the content modules listed below.
+      Each content module is a Gradle subproject using the `org.jetbrains.intellij.platform.module` plugin.
+      The descriptor of a module is located at `<subproject>/src/main/resources/<module name>.xml`.
 
-    <depends>com.intellij.modules.platform</depends>
-    <depends>com.intellij.modules.lang</depends>
-    <depends optional="true" config-file="nix-idea-lsp.xml">com.intellij.modules.lsp</depends>
+      - NixIDEA.core: Functionality available in all IDEs.
+      - NixIDEA.lsp:  Integration of language servers (only loaded if the IDE provides the LSP API).
 
-    <extensions defaultExtensionNs="com.intellij">
-
-        <fileType
-                name="Nix"
-                implementationClass="org.nixos.idea.file.NixFileType"
-                fieldName="INSTANCE"
-                language="Nix"
-                extensions="nix"/>
-
-        <lang.parserDefinition
-                language="Nix"
-                implementationClass="org.nixos.idea.lang.NixParserDefinition"/>
-
-        <lang.syntaxHighlighterFactory
-                language="Nix"
-                implementationClass="org.nixos.idea.lang.highlighter.NixSyntaxHighlighterFactory"/>
-
-        <highlightVisitor implementation="org.nixos.idea.lang.highlighter.NixHighlightVisitor"/>
-        <highlightVisitor implementation="org.nixos.idea.lang.highlighter.NixRainbowVisitor"/>
-
-        <additionalTextAttributes scheme="Default" file="colorSchemes/NixDefault.xml"/>
-        <additionalTextAttributes scheme="Darcula" file="colorSchemes/NixDarcula.xml"/>
-
-        <spellchecker.support
-                language="Nix"
-                implementationClass="org.nixos.idea.lang.NixSpellcheckingStrategy"/>
-
-        <lang.braceMatcher
-                language="Nix"
-                implementationClass="org.nixos.idea.lang.NixBraceMatcher"/>
-
-        <lang.quoteHandler
-                language="Nix"
-                implementationClass="org.nixos.idea.lang.NixQuoteHandler"/>
-
-        <lang.commenter
-                language="Nix"
-                implementationClass="org.nixos.idea.lang.NixCommenter"/>
-
-        <moveLeftRightHandler
-                language="Nix"
-                implementationClass="org.nixos.idea.lang.NixMoveElementLeftRightHandler"/>
-
-        <lang.foldingBuilder
-                language="Nix"
-                implementationClass="org.nixos.idea.lang.NixFoldingBuilder"/>
-
-        <searcher forClass="com.intellij.find.usages.api.UsageSearchParameters"
-                  implementationClass="org.nixos.idea.lang.references.NixUsageSearcher"/>
-
-        <psi.referenceContributor
-                language="Nix"
-                implementation="org.nixos.idea.imports.NixFilePathReferenceContributor"/>
-
-        <projectConfigurable
-                parentId="build"
-                displayName="NixIDEA Settings"
-                id="org.nixos.idea.settings.NixIDEASettings"
-                instance="org.nixos.idea.settings.NixIDEASettings"/>
-
-        <applicationService
-                serviceImplementation="org.nixos.idea.settings.NixExternalFormatterSettings"/>
-
-        <applicationService
-                serviceImplementation="org.nixos.idea.settings.NixSymbolSettings"/>
-
-        <applicationConfigurable
-                parentId="language"
-                displayName="Nix"
-                id="org.nixos.idea.settings.ui.NixLangSettingsConfigurable"
-                instance="org.nixos.idea.settings.ui.NixLangSettingsConfigurable"/>
-
-        <applicationConfigurable
-                parentId="org.nixos.idea.settings.ui.NixLangSettingsConfigurable"
-                displayName="Symbols"
-                id="org.nixos.idea.settings.ui.NixSymbolConfigurable"
-                instance="org.nixos.idea.settings.ui.NixSymbolConfigurable"/>
-
-        <colorSettingsPage
-                implementation="org.nixos.idea.settings.ui.NixColorSettingsPage"/>
-
-        <formattingService implementation="org.nixos.idea.format.NixExternalFormatter"/>
-
-        <notificationGroup id="NixIDEA" displayType="BALLOON"/>
-    </extensions>
-
+      IDE-specific functionality can be added as additional optional modules
+      which declare a dependency on the corresponding IDE-specific plugin or module.
+      -->
+    <content>
+        <module name="NixIDEA.core" loading="required"/>
+        <module name="NixIDEA.lsp"/>
+    </content>
 </idea-plugin>

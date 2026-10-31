@@ -1,0 +1,100 @@
+<!--
+  Descriptor of the content module "NixIDEA.core".
+  It contains the functionality which is available in all IDEs.
+  The module is loaded with loading="required" (see META-INF/plugin.xml of the root project).
+  The file name must match the module name and the file must be in the root of the resources (not in META-INF).
+  -->
+<idea-plugin>
+
+    <dependencies>
+        <plugin id="com.intellij.modules.lang"/>
+        <module name="intellij.spellchecker"/>
+    </dependencies>
+
+    <extensions defaultExtensionNs="com.intellij">
+
+        <fileType
+                name="Nix"
+                implementationClass="org.nixos.idea.file.NixFileType"
+                fieldName="INSTANCE"
+                language="Nix"
+                extensions="nix"/>
+
+        <lang.parserDefinition
+                language="Nix"
+                implementationClass="org.nixos.idea.lang.NixParserDefinition"/>
+
+        <lang.syntaxHighlighterFactory
+                language="Nix"
+                implementationClass="org.nixos.idea.lang.highlighter.NixSyntaxHighlighterFactory"/>
+
+        <highlightVisitor implementation="org.nixos.idea.lang.highlighter.NixHighlightVisitor"/>
+        <highlightVisitor implementation="org.nixos.idea.lang.highlighter.NixRainbowVisitor"/>
+
+        <additionalTextAttributes scheme="Default" file="colorSchemes/NixDefault.xml"/>
+        <additionalTextAttributes scheme="Darcula" file="colorSchemes/NixDarcula.xml"/>
+
+        <spellchecker.support
+                language="Nix"
+                implementationClass="org.nixos.idea.lang.NixSpellcheckingStrategy"/>
+
+        <lang.braceMatcher
+                language="Nix"
+                implementationClass="org.nixos.idea.lang.NixBraceMatcher"/>
+
+        <lang.quoteHandler
+                language="Nix"
+                implementationClass="org.nixos.idea.lang.NixQuoteHandler"/>
+
+        <lang.commenter
+                language="Nix"
+                implementationClass="org.nixos.idea.lang.NixCommenter"/>
+
+        <moveLeftRightHandler
+                language="Nix"
+                implementationClass="org.nixos.idea.lang.NixMoveElementLeftRightHandler"/>
+
+        <lang.foldingBuilder
+                language="Nix"
+                implementationClass="org.nixos.idea.lang.NixFoldingBuilder"/>
+
+        <searcher forClass="com.intellij.find.usages.api.UsageSearchParameters"
+                  implementationClass="org.nixos.idea.lang.references.NixUsageSearcher"/>
+
+        <psi.referenceContributor
+                language="Nix"
+                implementation="org.nixos.idea.imports.NixFilePathReferenceContributor"/>
+
+        <projectConfigurable
+                parentId="build"
+                displayName="NixIDEA Settings"
+                id="org.nixos.idea.settings.NixIDEASettings"
+                instance="org.nixos.idea.settings.NixIDEASettings"/>
+
+        <applicationService
+                serviceImplementation="org.nixos.idea.settings.NixExternalFormatterSettings"/>
+
+        <applicationService
+                serviceImplementation="org.nixos.idea.settings.NixSymbolSettings"/>
+
+        <applicationConfigurable
+                parentId="language"
+                displayName="Nix"
+                id="org.nixos.idea.settings.ui.NixLangSettingsConfigurable"
+                instance="org.nixos.idea.settings.ui.NixLangSettingsConfigurable"/>
+
+        <applicationConfigurable
+                parentId="org.nixos.idea.settings.ui.NixLangSettingsConfigurable"
+                displayName="Symbols"
+                id="org.nixos.idea.settings.ui.NixSymbolConfigurable"
+                instance="org.nixos.idea.settings.ui.NixSymbolConfigurable"/>
+
+        <colorSettingsPage
+                implementation="org.nixos.idea.settings.ui.NixColorSettingsPage"/>
+
+        <formattingService implementation="org.nixos.idea.format.NixExternalFormatter"/>
+
+        <notificationGroup id="NixIDEA" displayType="BALLOON"/>
+    </extensions>
+
+</idea-plugin>

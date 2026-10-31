@@ -6,6 +6,9 @@
 
 ### Changed
 
+- Split plugin into content modules (plugin model v2) to prepare for IDE-specific functionality
+- Require IntelliJ Platform 2025.3 or newer
+
 ### Deprecated
 
 ### Removed
