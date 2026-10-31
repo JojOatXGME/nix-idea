@@ -4,6 +4,10 @@
 
 ### Added
 
+- Inspections for redundant parentheses, redundant quotes in attribute names, unquoted URLs,
+  unused variables, and variables which shadow built-ins or other variables
+  ([#26](https://github.com/NixOS/nix-idea/issues/26))
+
 ### Changed
 
 ### Deprecated

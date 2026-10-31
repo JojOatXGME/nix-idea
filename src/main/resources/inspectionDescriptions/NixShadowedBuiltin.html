@@ -1,0 +1,10 @@
+<html>
+<body>
+Reports variables which hide a built-in that is available without the <code>builtins.</code> prefix,
+like <code>true</code>, <code>map</code> or <code>import</code>.
+<p>Example:</p>
+<pre><code>let map = f: f; in map (x: x) [ 1 2 3 ]</code></pre>
+<p>This inspection requires the symbol support of NixIDEA, which is currently a preview feature.
+You can enable it in <em>Settings | Languages &amp; Frameworks | Nix | Symbols</em>.</p>
+</body>
+</html>

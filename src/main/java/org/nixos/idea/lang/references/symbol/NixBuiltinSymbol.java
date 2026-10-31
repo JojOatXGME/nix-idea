@@ -10,7 +10,7 @@ import org.nixos.idea.lang.highlighter.NixTextAttributes;
 import java.util.Objects;
 
 @SuppressWarnings("UnstableApiUsage")
-final class NixBuiltinSymbol extends NixSymbol
+public final class NixBuiltinSymbol extends NixSymbol
         implements Pointer<NixBuiltinSymbol> {
 
     private final @NotNull NixBuiltin myBuiltin;

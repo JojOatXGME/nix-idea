@@ -48,6 +48,15 @@ public interface NixDeclarationHost extends NixPsiElement {
      */
     @Nullable NixUserSymbol getSymbolForScope(@NotNull String variableName);
 
+    /**
+     * Returns the symbols of all variables declared by this element.
+     * The result is empty if {@link #isDeclaringVariables()} returns {@code false}.
+     * Each symbol in the result is also returned by {@link #getSymbolForScope(String)} for its name.
+     *
+     * @return The symbols of the declared variables.
+     */
+    @NotNull Collection<NixUserSymbol> getDeclaredVariables();
+
     @Nullable NixUserSymbol getSymbol(@NotNull List<String> attributePath);
 
     @NotNull Collection<NixSymbolDeclaration> getDeclarations(@NotNull List<String> attributePath);

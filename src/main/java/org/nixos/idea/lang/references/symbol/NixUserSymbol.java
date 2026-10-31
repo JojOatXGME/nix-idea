@@ -48,6 +48,10 @@ public final class NixUserSymbol extends NixSymbol
         return myPath.get(myPath.size() - 1);
     }
 
+    public @NotNull NixDeclarationHost getHost() {
+        return myHost;
+    }
+
     public @NotNull Collection<NixSymbolDeclaration> getDeclarations() {
         return myHost.getDeclarations(myPath);
     }
