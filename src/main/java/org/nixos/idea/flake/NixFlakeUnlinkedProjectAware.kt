@@ -7,7 +7,7 @@ import com.intellij.openapi.externalSystem.model.ProjectSystemId
 import com.intellij.openapi.externalSystem.service.project.trusted.ExternalSystemTrustedProjectDialog
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.vfs.VirtualFile
-import com.intellij.util.io.NioFiles
+import com.intellij.openapi.util.io.NioFiles
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import org.nixos.idea.flake.model.NixFlakeWorkspaceModel
