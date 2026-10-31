@@ -1,7 +1,7 @@
 // Content module "NixIDEA.core": Functionality available in all IDEs.
-// Common configuration is applied by the root project (see subprojects block in ../build.gradle.kts).
 
 plugins {
+    id("local.plugin-module")
     id("org.jetbrains.intellij.platform.grammarkit")
 }
 

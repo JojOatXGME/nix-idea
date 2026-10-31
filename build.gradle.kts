@@ -4,7 +4,6 @@ import org.jetbrains.changelog.markdownToHTML
 import org.jetbrains.intellij.platform.gradle.IntelliJPlatformType
 import org.jetbrains.intellij.platform.gradle.TestFrameworkType
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
-import org.jetbrains.kotlin.gradle.dsl.KotlinJvmProjectExtension
 
 plugins {
     id("java")
@@ -39,45 +38,6 @@ java {
 kotlin {
     compilerOptions {
         jvmTarget.set(JvmTarget.JVM_21)
-    }
-}
-
-// Common configuration of the content modules (see settings.gradle.kts)
-val jetbrainsAnnotations = libs.jetbrains.annotations
-subprojects {
-    apply(plugin = "java")
-    apply(plugin = "org.jetbrains.kotlin.jvm")
-    apply(plugin = "org.jetbrains.intellij.platform.module")
-
-    group = rootProject.group
-    version = rootProject.version
-
-    configure<JavaPluginExtension> {
-        sourceCompatibility = JavaVersion.VERSION_21
-    }
-    configure<KotlinJvmProjectExtension> {
-        compilerOptions {
-            jvmTarget.set(JvmTarget.JVM_21)
-        }
-    }
-
-    repositories {
-        mavenCentral()
-        intellijPlatform {
-            defaultRepositories()
-        }
-    }
-
-    dependencies {
-        "compileOnly"(jetbrainsAnnotations)
-        // The IntelliJ Platform is inherited from the root project.
-    }
-
-    tasks.withType<JavaCompile>().configureEach {
-        options.encoding = "UTF-8"
-    }
-    tasks.withType<Javadoc>().configureEach {
-        options.encoding = "UTF-8"
     }
 }
 
