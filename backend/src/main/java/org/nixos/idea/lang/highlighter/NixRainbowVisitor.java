@@ -14,9 +14,7 @@ import java.util.List;
 
 public final class NixRainbowVisitor extends RainbowVisitor {
 
-    public static final List<TextAttributesKey> RAINBOW_ATTRIBUTES = List.of(
-            NixTextAttributes.LOCAL_VARIABLE,
-            NixTextAttributes.PARAMETER);
+    public static final List<TextAttributesKey> RAINBOW_ATTRIBUTES = NixTextAttributes.RAINBOW_ATTRIBUTES;
 
     private Delegate myDelegate;
 

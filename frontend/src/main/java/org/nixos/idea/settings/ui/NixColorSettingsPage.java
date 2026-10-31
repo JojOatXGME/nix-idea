@@ -11,7 +11,6 @@ import org.jetbrains.annotations.NonNls;
 import org.jetbrains.annotations.NotNull;
 import org.nixos.idea.icon.NixIcons;
 import org.nixos.idea.lang.NixLanguage;
-import org.nixos.idea.lang.highlighter.NixRainbowVisitor;
 import org.nixos.idea.lang.highlighter.NixSyntaxHighlighter;
 import org.nixos.idea.lang.highlighter.NixTextAttributes;
 
@@ -64,7 +63,7 @@ public final class NixColorSettingsPage implements RainbowColorSettingsPage {
         // I think this method shall return true if the NixRainbowVisitor will always override the color of the given
         // key. Unfortunately this method is not documented, but I assume the semantic highlighting will avoid using
         // colors which correspond to attribute keys for which this method returns false.
-        return NixRainbowVisitor.RAINBOW_ATTRIBUTES.contains(type);
+        return NixTextAttributes.RAINBOW_ATTRIBUTES.contains(type);
     }
 
     @Override

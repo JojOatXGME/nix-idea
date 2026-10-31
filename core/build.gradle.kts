@@ -1,4 +1,4 @@
-// Content module "nix-idea.core": Functionality available in all IDEs.
+// Content module "nix-idea.core": Language basics, loaded in all IDEs and, in split mode, in both processes.
 
 plugins {
     id("local.plugin-module")
@@ -7,8 +7,6 @@ plugins {
 
 dependencies {
     intellijPlatform {
-        bundledModule("intellij.spellchecker")
-
         // version of IntelliJ patched JFlex
         // -> https://github.com/JetBrains/intellij-deps-jflex
         jflex("1.10.17")

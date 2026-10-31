@@ -3,6 +3,8 @@ package org.nixos.idea.lang.highlighter;
 import com.intellij.openapi.editor.DefaultLanguageHighlighterColors;
 import com.intellij.openapi.editor.colors.TextAttributesKey;
 
+import java.util.List;
+
 import static com.intellij.openapi.editor.colors.TextAttributesKey.createTextAttributesKey;
 
 public final class NixTextAttributes {
@@ -66,4 +68,13 @@ public final class NixTextAttributes {
     private NixTextAttributes() {
         // Cannot be instantiated
     }
+
+    /**
+     * Attributes which are overridden by the rainbow highlighting when it is enabled.
+     * Defined here instead of in {@code NixRainbowVisitor} so that the color settings page,
+     * which is located in the frontend module, can access it.
+     */
+    public static final List<TextAttributesKey> RAINBOW_ATTRIBUTES = List.of(
+            LOCAL_VARIABLE,
+            PARAMETER);
 }

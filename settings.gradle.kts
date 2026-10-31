@@ -8,6 +8,9 @@ rootProject.name = "NixIDEA"
 // The jar of each module is named after the module ("nix-idea.<project path>", see local.plugin-module),
 // i.e. the project `:core` becomes the content module `nix-idea.core`.
 include("core")
+include("backend")
+include("frontend")
+include("spellchecker")
 include("lsp")
 
 enableFeaturePreview("STABLE_CONFIGURATION_CACHE")

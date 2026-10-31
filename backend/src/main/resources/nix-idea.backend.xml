@@ -1,0 +1,56 @@
+<!--
+  Descriptor of the content module "nix-idea.backend".
+  It contains the functionality which needs the project model, the file system or external processes
+  (highlighting passes, folding, references and usages, the external formatter, and the settings pages).
+  In split mode, the module is only loaded in the backend process because it depends on intellij.platform.backend.
+  -->
+<idea-plugin>
+
+    <dependencies>
+        <module name="nix-idea.core"/>
+        <module name="intellij.platform.backend"/>
+    </dependencies>
+
+    <extensions defaultExtensionNs="com.intellij">
+
+        <highlightVisitor implementation="org.nixos.idea.lang.highlighter.NixHighlightVisitor"/>
+
+        <highlightVisitor implementation="org.nixos.idea.lang.highlighter.NixRainbowVisitor"/>
+
+        <lang.foldingBuilder
+                language="Nix"
+                implementationClass="org.nixos.idea.lang.NixFoldingBuilder"/>
+
+        <searcher forClass="com.intellij.find.usages.api.UsageSearchParameters"
+                  implementationClass="org.nixos.idea.lang.references.NixUsageSearcher"/>
+
+        <psi.referenceContributor
+                language="Nix"
+                implementation="org.nixos.idea.imports.NixFilePathReferenceContributor"/>
+
+        <projectConfigurable
+                parentId="build"
+                displayName="NixIDEA Settings"
+                id="org.nixos.idea.settings.NixIDEASettings"
+                instance="org.nixos.idea.settings.NixIDEASettings"/>
+
+        <applicationService
+                serviceImplementation="org.nixos.idea.settings.NixExternalFormatterSettings"/>
+
+        <applicationConfigurable
+                parentId="language"
+                displayName="Nix"
+                id="org.nixos.idea.settings.ui.NixLangSettingsConfigurable"
+                instance="org.nixos.idea.settings.ui.NixLangSettingsConfigurable"/>
+
+        <applicationConfigurable
+                parentId="org.nixos.idea.settings.ui.NixLangSettingsConfigurable"
+                displayName="Symbols"
+                id="org.nixos.idea.settings.ui.NixSymbolConfigurable"
+                instance="org.nixos.idea.settings.ui.NixSymbolConfigurable"/>
+
+        <formattingService implementation="org.nixos.idea.format.NixExternalFormatter"/>
+
+    </extensions>
+
+</idea-plugin>
