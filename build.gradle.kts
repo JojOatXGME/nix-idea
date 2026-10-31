@@ -1,3 +1,4 @@
+import java.time.Duration
 import org.jetbrains.changelog.Changelog
 import org.jetbrains.changelog.markdownToHTML
 import org.jetbrains.intellij.platform.gradle.IntelliJPlatformType
@@ -229,7 +230,7 @@ tasks {
 
     test {
         // Fail fast instead of hanging until the CI job is cancelled
-        timeout = java.time.Duration.ofMinutes(10)
+        timeout = Duration.ofMinutes(10)
         val testDataPath = rootProject.rootDir.resolve("src/test/testData").path
         inputs.dir(testDataPath).withPathSensitivity(PathSensitivity.RELATIVE)
 
