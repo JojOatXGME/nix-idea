@@ -237,6 +237,11 @@ tasks {
     test {
         // Fail fast instead of hanging until the CI job is cancelled
         timeout = Duration.ofMinutes(10)
+        // TEMPORARY (diagnostics): show which test hangs
+        testLogging {
+            events("started", "passed", "skipped", "failed")
+        }
+        systemProperty("junit.jupiter.execution.timeout.default", "2m")
         val testDataPath = rootProject.rootDir.resolve("src/test/testData").path
         inputs.dir(testDataPath).withPathSensitivity(PathSensitivity.RELATIVE)
 
