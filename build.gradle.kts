@@ -1,3 +1,4 @@
+import java.time.Duration
 import org.jetbrains.changelog.Changelog
 import org.jetbrains.changelog.markdownToHTML
 import org.jetbrains.intellij.platform.gradle.IntelliJPlatformType
@@ -231,7 +232,15 @@ tasks {
         )
     }
 
+    prepareTestSandbox {
+        // The bundled Vue.js plugin fails in tests since 2025.3: its LSP support cannot find its bundled
+        // language server (ExceptionInInitializerError in VueServices.kt), which fails many of our tests.
+        disabledPlugins.add("org.jetbrains.plugins.vue")
+    }
+
     test {
+        // Fail instead of hanging until the CI job is cancelled
+        timeout = Duration.ofMinutes(10)
         val testDataPath = rootProject.rootDir.resolve("src/test/testData").path
         inputs.dir(testDataPath).withPathSensitivity(PathSensitivity.RELATIVE)
 

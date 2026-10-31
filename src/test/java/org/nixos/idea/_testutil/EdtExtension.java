@@ -1,7 +1,7 @@
 package org.nixos.idea._testutil;
 
-import com.intellij.ide.IdeEventQueue;
 import com.intellij.testFramework.EdtTestUtil;
+import com.intellij.testFramework.PlatformTestUtil;
 import org.junit.jupiter.api.extension.DynamicTestInvocationContext;
 import org.junit.jupiter.api.extension.ExtensionContext;
 import org.junit.jupiter.api.extension.InvocationInterceptor;
@@ -82,10 +82,23 @@ final class EdtExtension implements InvocationInterceptor {
 
         return () -> {
             try {
-                // Make sure all deferred tasks have finished
+                // Make sure all deferred tasks have finished.
+                // We have to dispatch the events ourselves instead of waiting for the queue to become empty.
+                // Since 2025.3, the platform keeps re-posting FLUSH_NOW events as long as nobody dispatches them,
+                // so IdeEventQueue.peekEvent() would never return null while we are polling it.
+                // Exceptions thrown by deferred tasks propagate out of the dispatch loop.
+                // We collect them and continue until all events have been dispatched.
                 boolean incomplete;
                 do {
-                    incomplete = EdtTestUtil.runInEdtAndGet(() -> IdeEventQueue.getInstance().peekEvent() != null);
+                    incomplete = EdtTestUtil.runInEdtAndGet(() -> {
+                        try {
+                            PlatformTestUtil.dispatchAllEventsInIdeEventQueue();
+                            return false;
+                        } catch (Throwable e) {
+                            uncaughtExceptions.execute(() -> {throw e;});
+                            return true;
+                        }
+                    });
                 } while (incomplete);
             } finally {
                 edt.setUncaughtExceptionHandler(previousExceptionHandler);
