@@ -1,4 +1,4 @@
-// Content module "NixIDEA.core": Functionality available in all IDEs.
+// Content module "nix-idea.core": Functionality available in all IDEs.
 
 plugins {
     id("local.plugin-module")

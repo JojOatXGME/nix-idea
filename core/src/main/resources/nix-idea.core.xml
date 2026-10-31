@@ -1,5 +1,5 @@
 <!--
-  Descriptor of the content module "NixIDEA.core".
+  Descriptor of the content module "nix-idea.core".
   It contains the functionality which is available in all IDEs.
   The module is loaded with loading="required" (see META-INF/plugin.xml of the root project).
   The file name must match the module name and the file must be in the root of the resources (not in META-INF).

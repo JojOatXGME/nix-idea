@@ -5,14 +5,14 @@
       Each content module is a Gradle subproject using the `org.jetbrains.intellij.platform.module` plugin.
       The descriptor of a module is located at `<subproject>/src/main/resources/<module name>.xml`.
 
-      - NixIDEA.core: Functionality available in all IDEs.
-      - NixIDEA.lsp:  Integration of language servers (only loaded if the IDE provides the LSP API).
+      - nix-idea.core: Functionality available in all IDEs.
+      - nix-idea.lsp:  Integration of language servers (only loaded if the IDE provides the LSP API).
 
       IDE-specific functionality can be added as additional optional modules
       which declare a dependency on the corresponding IDE-specific plugin or module.
       -->
     <content>
-        <module name="NixIDEA.core" loading="required"/>
-        <module name="NixIDEA.lsp"/>
+        <module name="nix-idea.core" loading="required"/>
+        <module name="nix-idea.lsp"/>
     </content>
 </idea-plugin>
