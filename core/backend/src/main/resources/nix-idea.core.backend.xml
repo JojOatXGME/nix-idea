@@ -1,5 +1,5 @@
 <!--
-  Descriptor of the content module "nix-idea.backend".
+  Descriptor of the content module "nix-idea.core.backend".
   It contains the functionality which needs the project model, the file system or external processes
   (highlighting passes, folding, references and usages, the external formatter, and the settings pages).
   In split mode, the module is only loaded in the backend process because it depends on intellij.platform.backend.
@@ -7,7 +7,7 @@
 <idea-plugin>
 
     <dependencies>
-        <module name="nix-idea.core"/>
+        <module name="nix-idea.core.shared"/>
         <module name="intellij.platform.backend"/>
     </dependencies>
 

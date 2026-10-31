@@ -1,4 +1,4 @@
-// Content module "nix-idea.core": Language basics, loaded in all IDEs and, in split mode, in both processes.
+// Content module "nix-idea.core.shared": Language basics, loaded in all IDEs and, in split mode, in both processes.
 
 plugins {
     id("local.plugin-module")

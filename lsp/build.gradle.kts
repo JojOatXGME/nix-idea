@@ -6,6 +6,6 @@ plugins {
 }
 
 dependencies {
-    implementation(project(":core"))
-    implementation(project(":backend"))
+    implementation(project(":core:shared"))
+    implementation(project(":core:backend"))
 }

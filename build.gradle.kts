@@ -68,9 +68,9 @@ dependencies {
         //testFramework(TestFrameworkType.JUnit5)
 
         // Content modules, packaged into lib/modules/ of the plugin distribution
-        pluginModule(implementation(project(":core")))
-        pluginModule(implementation(project(":backend")))
-        pluginModule(implementation(project(":frontend")))
+        pluginModule(implementation(project(":core:shared")))
+        pluginModule(implementation(project(":core:backend")))
+        pluginModule(implementation(project(":core:frontend")))
         pluginModule(implementation(project(":spellchecker")))
         pluginModule(implementation(project(":lsp")))
     }

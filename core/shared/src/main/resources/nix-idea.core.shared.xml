@@ -1,5 +1,5 @@
 <!--
-  Descriptor of the content module "nix-idea.core".
+  Descriptor of the content module "nix-idea.core.shared".
   It contains the language basics (file type, lexer, parser, PSI, syntax highlighter and simple editor handlers).
   The module is loaded with loading="required" (see META-INF/plugin.xml of the root project).
   It depends neither on intellij.platform.frontend nor on intellij.platform.backend,

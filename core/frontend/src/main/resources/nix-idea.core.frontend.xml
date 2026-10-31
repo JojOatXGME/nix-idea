@@ -1,14 +1,14 @@
 <!--
-  Descriptor of the content module "nix-idea.frontend".
+  Descriptor of the content module "nix-idea.core.frontend".
   It contains the functionality which belongs to the UI process: the color settings page.
-  The default colors (additionalTextAttributes) stay in nix-idea.core, so that both processes know them.
+  The default colors (additionalTextAttributes) stay in nix-idea.core.shared, so that both processes know them.
   In split mode, the module is only loaded in the frontend process because it depends on intellij.platform.frontend.
   In a monolithic IDE, both intellij.platform.frontend and intellij.platform.backend are available.
   -->
 <idea-plugin>
 
     <dependencies>
-        <module name="nix-idea.core"/>
+        <module name="nix-idea.core.shared"/>
         <module name="intellij.platform.frontend"/>
     </dependencies>
 

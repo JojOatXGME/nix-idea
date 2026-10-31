@@ -1,12 +1,12 @@
 <!--
   Descriptor of the content module "nix-idea.spellchecker".
-  It is separated from nix-idea.core so that the dependency on intellij.spellchecker
-  does not prevent nix-idea.core from being loaded in processes without the spellchecker.
+  It is separated from nix-idea.core.shared so that the dependency on intellij.spellchecker
+  does not prevent nix-idea.core.shared from being loaded in processes without the spellchecker.
   -->
 <idea-plugin>
 
     <dependencies>
-        <module name="nix-idea.core"/>
+        <module name="nix-idea.core.shared"/>
         <module name="intellij.spellchecker"/>
     </dependencies>
 
