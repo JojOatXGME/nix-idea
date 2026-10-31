@@ -31,19 +31,21 @@ import javax.swing.Icon
 class NixFlakeInputsRootsProvider : AdditionalLibraryRootsProvider() {
 
     override fun getAdditionalProjectLibraries(project: Project): Collection<SyntheticLibrary> {
-        val result = mutableListOf<SyntheticLibrary>()
+        // Inputs are already deduplicated per flake (see NixFlakeSyncService.collectInputs). The same store path can
+        // still be used by multiple linked flakes, so deduplicate across flakes as well. The first flake wins the name.
+        val result = LinkedHashMap<String, SyntheticLibrary>()
         for (flake in NixFlakeImportState.getInstance(project).flakes) {
             for (input in flake.inputs) {
-                val root = input.storePath?.let { LocalFileSystem.getInstance().findFileByPath(it) } ?: continue
-                result.add(NixFlakeInputLibrary(input.name ?: root.name, input.lockedRef, root))
+                val storePath = input.storePath ?: continue
+                if (storePath in result) continue
+                val root = LocalFileSystem.getInstance().findFileByPath(storePath) ?: continue
+                result[storePath] = NixFlakeInputLibrary(input.name ?: root.name, input.lockedRef, root)
             }
         }
-        // TODO(decision): The same input (same store path) may be used by multiple flakes or transitively.
-        //  Deduplicate by store path? SyntheticLibrary instances with equal roots are merged in the Project view anyway.
         // TODO(decision): Index everything, or only `.nix` files? Large inputs like nixpkgs (~40k files) make indexing slow.
         //  `SyntheticLibrary.getExcludeFileCondition()` can skip directories, or the root could be registered as
         //  non-indexable once `WorkspaceFileKind.EXTERNAL_NON_INDEXABLE` can be used (needs option 1).
-        return result
+        return result.values
     }
 
     // `/nix/store` is immutable: never return store paths from `getRootsToWatch`.

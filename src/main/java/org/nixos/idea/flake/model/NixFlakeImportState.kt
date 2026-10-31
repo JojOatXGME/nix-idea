@@ -54,7 +54,8 @@ class NixFlakeImportState(private val project: Project) : SimplePersistentStateC
 
     @Tag("input")
     class InputState : BaseState() {
-        /** Attribute path of the input, e.g. `nixpkgs` or `home-manager/nixpkgs` for transitive inputs. */
+        /** Attribute path of the input, e.g. `nixpkgs` or `home-manager/nixpkgs` for transitive inputs.
+         *  If the same store path is reachable via multiple names, only the first one in breadth-first order is stored. */
         var name by string()
         /** Store path containing the input's source (`nix flake archive --json` → `inputs.<name>.path`). */
         var storePath by string()
@@ -62,6 +63,8 @@ class NixFlakeImportState(private val project: Project) : SimplePersistentStateC
         var lockedRef by string()
         /** `false` for inputs with `flake = false`. */
         var isFlake by property(true)
+        /** `true` for inputs declared by the flake itself, `false` for inputs of inputs. */
+        var direct by property(false)
     }
 
     val flakes: List<FlakeState>

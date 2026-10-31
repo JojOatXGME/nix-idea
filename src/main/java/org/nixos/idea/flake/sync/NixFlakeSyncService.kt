@@ -17,6 +17,7 @@ import com.intellij.openapi.vfs.LocalFileSystem
 import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.platform.backend.observation.trackActivity
 import com.intellij.platform.ide.progress.withBackgroundProgress
+import com.intellij.util.ThreeState
 import com.intellij.util.messages.Topic
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
@@ -24,11 +25,13 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import org.nixos.idea.flake.NixFlakeActivityKey
+import org.nixos.idea.flake.NixFlakeGcRoots
 import org.nixos.idea.flake.NixFlakeSettings
 import org.nixos.idea.flake.model.NixFlakeImportState
 import org.nixos.idea.flake.model.NixFlakeInputsRootsProvider
 import org.nixos.idea.flake.model.NixFlakeWorkspaceModel
 import java.nio.file.Path
+import java.util.concurrent.ConcurrentHashMap
 
 /**
  * Runs the import ("sync") of linked flakes.
@@ -40,14 +43,21 @@ import java.nio.file.Path
  * Steps:
  *  1. Evaluate flake: `nix flake metadata --json` (description, lock file, store path of the flake)
  *  2. Fetch inputs: `nix flake archive --json` (makes sure all inputs are in the store, returns their store paths)
- *  3. Build formatter: `nix build .#formatter.<system>` (optional)
+ *  3. Build formatter: `nix build .#formatter.<system>` (only if `nix fmt` support is enabled)
  *  4. Apply the result to [NixFlakeImportState], the Workspace Model, and the library roots.
+ *
+ * Flakes are referenced by their plain directory (not `path:<dir>`), so nix behaves like `nix flake` on the command
+ * line: inside a git repository, files which are not tracked by git are ignored.
+ *
+ * Why a service and not static methods: the service gets a [CoroutineScope] from the platform which is cancelled when
+ * the project is closed or the plugin is unloaded, so running syncs don't outlive their project. It is also created
+ * lazily, and tests can replace it via `ServiceContainerUtil.replaceService`.
  */
 @Service(Service.Level.PROJECT)
 class NixFlakeSyncService(private val project: Project, private val cs: CoroutineScope) {
 
-    // TODO(decision): One mutex for all flakes keeps the Sync view readable. Per-flake locks would allow parallel imports.
-    private val mutex = Mutex()
+    /** One lock per flake: different flakes are imported in parallel (each has its own node in the Sync view). */
+    private val locks = ConcurrentHashMap<String, Mutex>()
 
     /** Starts a sync in the background and returns immediately. Used by actions and the auto-import tracker. */
     fun scheduleSync(flakeRoot: String, explicit: Boolean) {
@@ -68,9 +78,11 @@ class NixFlakeSyncService(private val project: Project, private val cs: Coroutin
             LOG.info("Skip sync of $flakeRoot: project is not trusted")
             return
         }
+        // TODO: A sync which is requested while another sync of the same flake is running waits for the running one.
+        //  It could instead cancel the running sync (the files changed again), or be dropped if one is already queued.
         project.trackActivity(NixFlakeActivityKey) {
-            mutex.withLock {
-                withBackgroundProgress(project, "Importing Nix flake") {
+            locks.computeIfAbsent(flakeRoot) { Mutex() }.withLock {
+                withBackgroundProgress(project, "Importing Nix flake ${Path.of(flakeRoot).fileName}") {
                     doSync(flakeRoot, explicit)
                 }
             }
@@ -82,46 +94,54 @@ class NixFlakeSyncService(private val project: Project, private val cs: Coroutin
         publisher.syncStarted(flakeRoot)
         var success = false
 
-        val buildDescriptor = DefaultBuildDescriptor(Any(), "Nix flake", flakeRoot, System.currentTimeMillis())
+        val buildDescriptor = DefaultBuildDescriptor(Any(), "Nix flake ${Path.of(flakeRoot).fileName}", flakeRoot, System.currentTimeMillis())
             .withRestartAction(ActionManager.getInstance().getAction("NixFlake.Reload"))
-        // TODO(decision): Activate the Sync tab only on explicit syncs or failures, to not steal focus on auto-reload.
-        //  `DefaultBuildDescriptor.withActivateToolWindowOnFailure/OnRun` or `BuildViewSettingsProvider` control this.
+        // Same behavior as the Gradle and Maven integrations (see `ProjectAware.reloadProject` and
+        // `ExternalSystemUtil` in intellij-community): The tool window is never activated when a sync starts; the
+        // progress bar in the status bar is the main indicator. When an explicit sync fails, the Build tool window is
+        // activated and shows the error. Failures of automatic reloads only show up in the Sync tab.
+        buildDescriptor.setActivateToolWindowWhenAdded(false)
+        buildDescriptor.setActivateToolWindowWhenFailed(explicit)
+        buildDescriptor.setAutoFocusContent(explicit)
+        buildDescriptor.setNavigateToError(if (explicit) ThreeState.UNSURE else ThreeState.NO)
         val root = SyncViewManager.createBuildProgress(project).start(descriptor(buildDescriptor))
         try {
             val dir = Path.of(flakeRoot)
             val flake = NixFlakeImportState.FlakeState().apply { this.root = flakeRoot }
 
             step(root, "Evaluate flake") { step ->
-                val metadata = parse(NixCommand.run(step, dir, "flake", "metadata", "--json", "path:$flakeRoot"))
+                val metadata = parse(NixCommand.run(step, dir, "flake", "metadata", "--json", flakeRoot))
                 flake.description = metadata.str("description")
                 flake.storePath = metadata.str("path")
                 flake.lastModified = metadata.get("lastModified")?.asLong ?: 0L
                 // TODO: `metadata.locks.nodes` has the locked refs and `flake = false` markers of all inputs.
                 //  Merge them into the inputs collected in the next step (InputState.lockedRef, InputState.isFlake).
-                // TODO(decision): `path:` copies the directory as-is. Using the plain directory makes nix use the git
-                //  repository instead, which ignores untracked files (a common surprise). Which one do users expect?
             }
 
             step(root, "Fetch inputs") { step ->
-                val archive = parse(NixCommand.run(step, dir, "flake", "archive", "--json", "path:$flakeRoot"))
-                collectInputs(archive, prefix = "", into = flake.inputs)
+                val archive = parse(NixCommand.run(step, dir, "flake", "archive", "--json", flakeRoot))
+                flake.inputs = collectInputs(archive)
             }
 
-            step(root, "Build formatter") { step ->
-                // TODO(decision): Is building the formatter part of the import, or done lazily on first format?
-                //  It can download a lot. If it's part of the import, feed the out path into NixExternalFormatterSettings
-                //  (per project, currently it is an application-level setting).
-                val system = NixCommand.run(step, dir, "eval", "--impure", "--raw", "--expr", "builtins.currentSystem").trim()
-                val hasFormatter = NixCommand.run(
-                    step, dir, "eval", "--json", "path:$flakeRoot#formatter", "--apply", "f: f ? \"$system\"",
-                ).trim() == "true"
-                if (hasFormatter) {
-                    flake.formatter = NixCommand.run(
-                        step, dir, "build", "--no-link", "--print-out-paths", "path:$flakeRoot#formatter.$system",
-                    ).trim().lines().firstOrNull()
-                }
-                else {
-                    step.output("Flake has no formatter for $system\n", true)
+            if (isNixFmtEnabled()) {
+                step(root, "Build formatter") { step ->
+                    // Part of the import, because IntelliJ's external formatter integration times out after 30 seconds,
+                    // which is not enough to build the formatter on first use. Most users will format at some point anyway.
+                    // TODO: Feed the out path into the `nix fmt` integration (https://github.com/NixOS/nix-idea/pull/104).
+                    val system = NixCommand.run(step, dir, "eval", "--impure", "--raw", "--expr", "builtins.currentSystem").trim()
+                    val hasFormatter = NixCommand.run(
+                        step, dir, "eval", "--json", "$flakeRoot#formatter", "--apply", "f: f ? \"$system\"",
+                    ).trim() == "true"
+                    if (hasFormatter) {
+                        // The out-link is a GC root, so `nix-collect-garbage` doesn't delete the formatter.
+                        val outLink = NixFlakeGcRoots.outLink(project, flakeRoot, "formatter")
+                        flake.formatter = NixCommand.run(
+                            step, dir, "build", "--out-link", outLink.toString(), "--print-out-paths", "$flakeRoot#formatter.$system",
+                        ).trim().lines().firstOrNull()
+                    }
+                    else {
+                        step.output("Flake has no formatter for $system\n", true)
+                    }
                 }
             }
 
@@ -137,18 +157,17 @@ class NixFlakeSyncService(private val project: Project, private val cs: Coroutin
         }
         catch (e: Exception) {
             LOG.info("Sync of $flakeRoot failed", e)
-            // TODO: Map well-known nix errors (missing `flake.lock`, syntax errors with position, untracked files in git)
-            //  to BuildIssue/FileMessageEvent, so the Sync view can navigate to `flake.nix:line:column`.
+            // TODO: Use the error mapping of NixCommand (BuildIssue/FileMessageEvent with file and position) once implemented.
             root.message("Import failed", e.message ?: e.toString(), MessageEvent.Kind.ERROR, null)
             root.fail()
-            if (!explicit) {
-                // TODO(decision): Show a notification for failed auto-reloads, or rely on the Sync view only?
-            }
         }
         finally {
             publisher.syncFinished(flakeRoot, success)
         }
     }
+
+    /** TODO: Return the setting of the `nix fmt` integration once https://github.com/NixOS/nix-idea/pull/104 is merged. */
+    private fun isNixFmtEnabled(): Boolean = false
 
     private suspend fun apply(flake: NixFlakeImportState.FlakeState) {
         val state = NixFlakeImportState.getInstance(project)
@@ -161,19 +180,35 @@ class NixFlakeSyncService(private val project: Project, private val cs: Coroutin
     private fun inputRoots(flake: NixFlakeImportState.FlakeState?): List<VirtualFile> =
         flake?.inputs.orEmpty().mapNotNull { input -> input.storePath?.let { LocalFileSystem.getInstance().refreshAndFindFileByPath(it) } }
 
-    /** `nix flake archive --json` returns `{"path": …, "inputs": {"<name>": {"path": …, "inputs": {…}}}}`. */
-    private fun collectInputs(node: JsonObject, prefix: String, into: MutableList<NixFlakeImportState.InputState>) {
-        val inputs = node.getAsJsonObject("inputs") ?: return
-        for ((name, value) in inputs.entrySet()) {
-            val input = value.asJsonObject
-            val fullName = prefix + name
-            into.add(NixFlakeImportState.InputState().apply {
-                this.name = fullName
-                this.storePath = input.str("path")
-            })
-            // TODO(decision): Include transitive inputs (e.g. `home-manager/nixpkgs`)? They are often duplicates via `follows`.
-            collectInputs(input, "$fullName/", into)
+    /**
+     * `nix flake archive --json` returns `{"path": …, "inputs": {"<name>": {"path": …, "inputs": {…}}}}`.
+     *
+     * Includes transitive inputs (e.g. `home-manager/nixpkgs`), so their sources are browsable as well.
+     * Inputs are deduplicated by store path (`follows` and identical locks result in the same path). The tree is
+     * traversed breadth-first, so an input which is both direct and transitive keeps the name of the direct input.
+     */
+    private fun collectInputs(archive: JsonObject): MutableList<NixFlakeImportState.InputState> {
+        val result = LinkedHashMap<String, NixFlakeImportState.InputState>()
+        val queue = ArrayDeque<Pair<String, JsonObject>>()
+        queue.add("" to archive)
+        while (queue.isNotEmpty()) {
+            val (prefix, node) = queue.removeFirst()
+            val inputs = node.getAsJsonObject("inputs") ?: continue
+            for ((name, value) in inputs.entrySet()) {
+                val input = value.asJsonObject
+                val fullName = prefix + name
+                val storePath = input.str("path") ?: continue
+                result.getOrPut(storePath) {
+                    NixFlakeImportState.InputState().apply {
+                        this.name = fullName
+                        this.storePath = storePath
+                        this.direct = prefix.isEmpty()
+                    }
+                }
+                queue.add("$fullName/" to input)
+            }
         }
+        return result.values.toMutableList()
     }
 
     private suspend fun step(

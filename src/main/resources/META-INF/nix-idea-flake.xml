@@ -45,8 +45,8 @@
                 icon="AllIcons.General.Add"/>
         <action id="NixFlake.Unlink"
                 class="org.nixos.idea.flake.ui.NixFlakeUnlinkAction"
-                text="Unlink Nix Flakes"
-                description="Removes all imported Nix flakes from the project"
+                text="Unlink Nix Flake…"
+                description="Removes selected Nix flakes from the project"
                 icon="AllIcons.General.Remove"/>
         <group id="NixFlake.ToolWindow.Toolbar">
             <reference ref="NixFlake.Reload"/>

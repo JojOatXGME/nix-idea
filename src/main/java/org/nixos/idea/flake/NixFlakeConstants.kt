@@ -1,8 +1,6 @@
 package org.nixos.idea.flake
 
 import com.intellij.openapi.externalSystem.model.ProjectSystemId
-import com.intellij.platform.backend.observation.ActivityKey
-import org.jetbrains.annotations.Nls
 
 /**
  * Constants shared by the Nix Flake integration.
@@ -37,13 +35,4 @@ object NixFlakeConstants {
     const val LOCK_FILE_NAME: String = "flake.lock"
 
     const val TOOL_WINDOW_ID: String = "Nix Flake"
-}
-
-/**
- * Lets `Observation.awaitConfiguration(project)` (used by tests, headless warm-up and Qodana) wait for running imports.
- * See [com.intellij.platform.backend.observation.trackActivity].
- */
-object NixFlakeActivityKey : ActivityKey {
-    override val presentableName: @Nls String
-        get() = "Nix flake import"
 }

@@ -6,7 +6,6 @@ import com.intellij.openapi.vfs.VfsUtilCore
 import com.intellij.platform.backend.workspace.workspaceModel
 import com.intellij.platform.workspace.jps.JpsImportedEntitySource
 import com.intellij.platform.workspace.jps.entities.ContentRootEntity
-import com.intellij.platform.workspace.jps.entities.ExcludeUrlEntity
 import com.intellij.platform.workspace.jps.entities.InheritedSdkDependency
 import com.intellij.platform.workspace.jps.entities.ModuleEntity
 import com.intellij.platform.workspace.jps.entities.ModuleId
@@ -43,10 +42,28 @@ object NixFlakeWorkspaceModel {
         source is JpsImportedEntitySource && source.externalSystemId == NixFlakeConstants.SYSTEM_ID.id
 
     /**
-     * TODO(decision): Module naming. The directory name is not unique if multiple flakes share a name, and
-     *  it may collide with modules created by other build tools or by the user (e.g. the project's own `.iml` module).
+     * Module names must be unique within the project (`ModuleId` is the symbolic ID of a module), even for modules in
+     * different directories. The name is therefore derived from the path relative to the project directory, like
+     * Gradle does for subprojects: `nix-flake` for a flake in the project directory, `nix-flake.sub.dir` for
+     * `<project>/sub/dir`. Flakes outside the project directory get their directory name and a hash.
+     * `/` and `:` are avoided because the name may be used as `.iml` file name.
+     *
+     * TODO: A module created by the user or another plugin may already use the name. Then pick another name
+     *  (e.g. append a number) and remember it in [NixFlakeImportState.FlakeState], instead of recomputing it here.
+     * TODO(decision): Renamed or moved directories. The linked flake is identified by its absolute path, so after a
+     *  rename the old flake is gone (the sync fails) and `flake.nix` at the new location shows up as unlinked.
+     *  Options: detect it via a VFS listener (`VFileMoveEvent`/`VFilePropertyChangeEvent` of a linked directory) and
+     *  update settings, state and module; or just drop flakes which don't exist anymore on the next sync.
      */
-    fun moduleName(flakeRoot: String): String = "nix-flake:" + Path.of(flakeRoot).fileName.toString()
+    fun moduleName(project: Project, flakeRoot: String): String {
+        val flakePath = Path.of(flakeRoot)
+        val basePath = project.basePath?.let { Path.of(it) }
+        if (basePath == null || !flakePath.startsWith(basePath)) {
+            return "nix-flake.${flakePath.fileName}-${Integer.toHexString(flakeRoot.hashCode())}"
+        }
+        return (listOf("nix-flake") + basePath.relativize(flakePath).map { it.toString() }.filter { it.isNotEmpty() })
+            .joinToString(".")
+    }
 
     suspend fun applyFlake(project: Project, flake: NixFlakeImportState.FlakeState) {
         val root = flake.root ?: return
@@ -57,23 +74,31 @@ object NixFlakeWorkspaceModel {
         val entitySource = LegacyBridgeJpsEntitySourceFactory.getInstance(project).createEntitySourceForModule(rootUrl, externalSource)
 
         workspaceModel.update("Nix flake import: $root") { storage ->
-            removeModule(storage, moduleName(root))
+            removeModule(storage, moduleName(project, root))
 
-            // TODO(decision): What if another module (e.g. the project's own module, or a Gradle module) already has
-            //  the flake directory as content root? Two modules must not share a content root.
-            //  Options: skip creating the module, attach the flake to the existing module, or replace it.
+            // TODO(decision): Another module (e.g. the project's own module, or a Gradle module) may already have the
+            //  flake directory as content root. The Workspace Model can store that, but the platform doesn't support it:
+            //  `ProjectFileIndex` maps every file to exactly one module, and Project Structure reports "Content root is
+            //  defined for multiple modules". Checking for an existing module first would depend on the import order.
+            //  Proposal: Don't give the module a content root at all. The module is then only a hook for "Build Project"
+            //  (`ModuleBuildTask` doesn't need content roots), and the runner looks up the flake via the module name in
+            //  NixFlakeImportState. Excludes would move to a `DirectoryIndexExcludePolicy`, which works for any module.
 
-            storage.addEntity(ModuleEntity(moduleName(root), listOf(InheritedSdkDependency, ModuleSourceDependency), entitySource) {
-                // TODO(decision): Module type. Without a type, IDEA shows a "module type unknown" warning in some places.
-                //  `GENERAL_MODULE` would fit for non-JVM projects.
+            storage.addEntity(ModuleEntity(moduleName(project, root), listOf(InheritedSdkDependency, ModuleSourceDependency), entitySource) {
+                // TODO(decision): Module type. A custom type is possible via the `moduleType` extension point (own icon and
+                //  name in Project Structure), but IDEA then expects a `ModuleBuilder` for the New Module wizard, and
+                //  projects show "unknown module type" when the plugin is disabled. Proposal: no custom type for now, but
+                //  set `GeneralModuleType.TYPE_ID` (`GENERAL_MODULE`), the platform's type for modules without
+                //  language-specific setup (needs a check that it is registered in all IDEs).
                 contentRoots = listOf(
-                    ContentRootEntity(rootUrl, emptyList(), entitySource) {
-                        // `nix build` creates `result*` symlinks into the store. Indexing them would index store paths twice.
-                        // TODO: Also exclude `.direnv`? Make excludes configurable?
-                        excludedUrls = listOf(
-                            ExcludeUrlEntity(urlManager.getOrCreateFromUrl(VfsUtilCore.pathToUrl("$root/result")), entitySource),
-                        )
-                    }
+                    // `nix build` creates `result` (or `result-<output>`) symlinks into the store. Indexing them would
+                    // index store paths as project content. Builds started by this plugin don't create them,
+                    // see NixFlakeGcRoots. Patterns match file names anywhere below the content root.
+                    // TODO: Users can also choose other names (`--out-link`). Ideally exclude every symlink into
+                    //  `/nix/store`, or everything that is not tracked by git (nix ignores it anyway). Possible via
+                    //  a `DirectoryIndexExcludePolicy` which checks symlinks / asks the git integration.
+                    // TODO: Also exclude `.direnv`? Make excludes configurable?
+                    ContentRootEntity(rootUrl, listOf("result", "result-*"), entitySource),
                 )
             })
         }
@@ -81,7 +106,7 @@ object NixFlakeWorkspaceModel {
 
     suspend fun removeFlake(project: Project, flakeRoot: String) {
         project.workspaceModel.update("Nix flake unlink: $flakeRoot") { storage ->
-            removeModule(storage, moduleName(flakeRoot))
+            removeModule(storage, moduleName(project, flakeRoot))
         }
         NixFlakeImportState.getInstance(project).remove(flakeRoot)
     }

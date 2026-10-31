@@ -95,6 +95,15 @@
                 id="org.nixos.idea.settings.ui.NixSymbolConfigurable"
                 instance="org.nixos.idea.settings.ui.NixSymbolConfigurable"/>
 
+        <applicationService
+                serviceImplementation="org.nixos.idea.settings.NixToolingSettings"/>
+
+        <applicationConfigurable
+                parentId="org.nixos.idea.settings.ui.NixLangSettingsConfigurable"
+                displayName="Environment"
+                id="org.nixos.idea.settings.ui.NixToolingConfigurable"
+                instance="org.nixos.idea.settings.ui.NixToolingConfigurable"/>
+
         <colorSettingsPage
                 implementation="org.nixos.idea.settings.ui.NixColorSettingsPage"/>
 

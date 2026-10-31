@@ -7,6 +7,9 @@ import com.intellij.openapi.externalSystem.model.ProjectSystemId
 import com.intellij.openapi.externalSystem.service.project.trusted.ExternalSystemTrustedProjectDialog
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.vfs.VirtualFile
+import com.intellij.util.io.NioFiles
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import org.nixos.idea.flake.model.NixFlakeWorkspaceModel
 import org.nixos.idea.flake.sync.NixFlakeSyncService
 import java.nio.file.Path
@@ -52,5 +55,9 @@ class NixFlakeUnlinkedProjectAware : ExternalSystemUnlinkedProjectAware {
     override suspend fun unlinkProject(project: Project, externalProjectPath: String) {
         NixFlakeSettings.getInstance(project).unlink(externalProjectPath)
         NixFlakeWorkspaceModel.removeFlake(project, externalProjectPath)
+        // Drop the GC roots, so `nix-collect-garbage` can delete the formatter and build results of the flake.
+        withContext(Dispatchers.IO) {
+            NioFiles.deleteRecursively(NixFlakeGcRoots.flakeDir(project, externalProjectPath))
+        }
     }
 }
