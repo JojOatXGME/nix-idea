@@ -9,7 +9,7 @@ import kotlin.reflect.KMutableProperty1
 import kotlin.reflect.KProperty
 import kotlin.reflect.KProperty1
 
-internal object SimplePersistentStateComponentHelper {
+object SimplePersistentStateComponentHelper {
 
     private const val MAX_HISTORY_SIZE = 5
 
