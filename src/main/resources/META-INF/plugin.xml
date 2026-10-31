@@ -5,14 +5,24 @@
       Each content module is a Gradle subproject using the `org.jetbrains.intellij.platform.module` plugin.
       The descriptor of a module is located at `<subproject>/src/main/resources/<module name>.xml`.
 
-      - nix-idea.core: Functionality available in all IDEs.
-      - nix-idea.lsp:  Integration of language servers (only loaded if the IDE provides the LSP API).
+      - nix-idea.core:         Language basics, loaded in all IDEs and, in split mode, in both processes.
+      - nix-idea.backend:      Functionality which needs the project model, the file system or external processes.
+      - nix-idea.frontend:     UI which belongs to the frontend process (color settings page).
+      - nix-idea.spellchecker: Spellchecking support (only loaded if the IDE provides the spellchecker).
+      - nix-idea.lsp:          Integration of language servers (only loaded if the IDE provides the LSP API).
+
+      Split mode (remote development): Modules depending on intellij.platform.backend are only loaded in the
+      backend process, modules depending on intellij.platform.frontend only in the frontend process, and modules
+      depending on neither in both processes. In a monolithic IDE, all modules are loaded.
 
       IDE-specific functionality can be added as additional optional modules
       which declare a dependency on the corresponding IDE-specific plugin or module.
       -->
     <content>
         <module name="nix-idea.core" loading="required"/>
+        <module name="nix-idea.backend"/>
+        <module name="nix-idea.frontend"/>
+        <module name="nix-idea.spellchecker"/>
         <module name="nix-idea.lsp"/>
     </content>
 </idea-plugin>

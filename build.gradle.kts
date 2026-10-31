@@ -69,6 +69,9 @@ dependencies {
 
         // Content modules, packaged into lib/modules/ of the plugin distribution
         pluginModule(implementation(project(":core")))
+        pluginModule(implementation(project(":backend")))
+        pluginModule(implementation(project(":frontend")))
+        pluginModule(implementation(project(":spellchecker")))
         pluginModule(implementation(project(":lsp")))
     }
 }

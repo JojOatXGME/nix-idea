@@ -7,6 +7,7 @@
 ### Changed
 
 - Split plugin into content modules (plugin model v2) to prepare for IDE-specific functionality
+- Separate frontend and backend functionality into dedicated content modules to support split mode (remote development)
 - Require IntelliJ Platform 2025.3 or newer
 
 ### Deprecated
