@@ -38,14 +38,14 @@ class NixFlakeSettings(private val project: Project) : SimplePersistentStateComp
 
     fun link(flakeRoot: String) {
         if (isLinked(flakeRoot)) return
-        state.linkedFlakes.add(flakeRoot)
-        state.intIncrementModificationCount()
+        // Assign a new list instead of mutating the old one, so that BaseState notices the modification.
+        state.linkedFlakes = (state.linkedFlakes + flakeRoot).toMutableList()
         project.messageBus.syncPublisher(TOPIC).onFlakeLinked(flakeRoot)
     }
 
     fun unlink(flakeRoot: String) {
-        if (state.linkedFlakes.remove(flakeRoot)) {
-            state.intIncrementModificationCount()
+        if (isLinked(flakeRoot)) {
+            state.linkedFlakes = (state.linkedFlakes - flakeRoot).toMutableList()
             project.messageBus.syncPublisher(TOPIC).onFlakeUnlinked(flakeRoot)
         }
     }

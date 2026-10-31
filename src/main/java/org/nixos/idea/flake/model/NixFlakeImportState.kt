@@ -70,15 +70,14 @@ class NixFlakeImportState(private val project: Project) : SimplePersistentStateC
     fun getFlake(root: String): FlakeState? = state.flakes.find { it.root == root }
 
     fun update(flake: FlakeState) {
-        state.flakes.removeIf { it.root == flake.root }
-        state.flakes.add(flake)
-        state.intIncrementModificationCount()
+        // Assign a new list instead of mutating the old one, so that BaseState notices the modification.
+        state.flakes = (state.flakes.filter { it.root != flake.root } + flake).toMutableList()
         project.messageBus.syncPublisher(TOPIC).stateChanged()
     }
 
     fun remove(root: String) {
-        if (state.flakes.removeIf { it.root == root }) {
-            state.intIncrementModificationCount()
+        if (getFlake(root) != null) {
+            state.flakes = state.flakes.filter { it.root != root }.toMutableList()
             project.messageBus.syncPublisher(TOPIC).stateChanged()
         }
     }
