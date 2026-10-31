@@ -37,6 +37,31 @@ public final class NixElementFactory {
         return (T) createElement(project, NixExpr.class, "", code, "");
     }
 
+    /**
+     * Creates an element of the same kind as the given element.
+     * For example, if the given element is an expression, the code is parsed as an expression.
+     * This is useful to replace an element with new code via {@link com.intellij.psi.PsiElement#replace}.
+     *
+     * @param original the element which defines the kind of the new element
+     * @param code     the code of the new element
+     * @return the new element
+     * @throws IllegalArgumentException if the kind of element is not supported
+     */
+    public static @NotNull NixPsiElement createLike(@NotNull NixPsiElement original, @NotNull String code) {
+        Project project = original.getProject();
+        if (original instanceof NixExpr) {
+            return createExpr(project, code);
+        } else if (original instanceof NixAttr) {
+            return createAttr(project, code);
+        } else if (original instanceof NixAttrPath) {
+            return createAttrPath(project, code);
+        } else if (original instanceof NixBind) {
+            return createBind(project, code);
+        } else {
+            throw new IllegalArgumentException("Unsupported element: " + original);
+        }
+    }
+
     public static <T extends NixPsiElement> @NotNull T createElement(
             @NotNull Project project, @NotNull Class<T> type,
             @NotNull String prefix, @NotNull String text, @NotNull String suffix) {

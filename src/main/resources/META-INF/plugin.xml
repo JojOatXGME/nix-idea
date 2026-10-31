@@ -58,6 +58,56 @@
                 language="Nix"
                 implementation="org.nixos.idea.imports.NixFilePathReferenceContributor"/>
 
+        <!-- Inspections -->
+        <localInspection
+                language="Nix"
+                groupPath="Nix"
+                groupName="Redundancy"
+                displayName="Redundant parentheses"
+                enabledByDefault="true"
+                level="WEAK WARNING"
+                implementationClass="org.nixos.idea.inspections.NixRedundantParenthesesInspection"/>
+        <localInspection
+                language="Nix"
+                groupPath="Nix"
+                groupName="Redundancy"
+                displayName="Redundant quotes in attribute names"
+                enabledByDefault="true"
+                level="WEAK WARNING"
+                implementationClass="org.nixos.idea.inspections.NixRedundantQuotesInspection"/>
+        <localInspection
+                language="Nix"
+                groupPath="Nix"
+                groupName="Redundancy"
+                displayName="Unused variable"
+                enabledByDefault="true"
+                level="WARNING"
+                implementationClass="org.nixos.idea.inspections.NixUnusedVariableInspection"/>
+        <localInspection
+                language="Nix"
+                groupPath="Nix"
+                groupName="Visibility"
+                displayName="Variable shadows built-in"
+                enabledByDefault="true"
+                level="WARNING"
+                implementationClass="org.nixos.idea.inspections.NixShadowedBuiltinInspection"/>
+        <localInspection
+                language="Nix"
+                groupPath="Nix"
+                groupName="Visibility"
+                displayName="Variable shadows other variable"
+                enabledByDefault="true"
+                level="WEAK WARNING"
+                implementationClass="org.nixos.idea.inspections.NixShadowedVariableInspection"/>
+        <localInspection
+                language="Nix"
+                groupPath="Nix"
+                groupName="Legacy"
+                displayName="Unquoted URL"
+                enabledByDefault="true"
+                level="WARNING"
+                implementationClass="org.nixos.idea.inspections.NixUnquotedUriInspection"/>
+
         <projectConfigurable
                 parentId="build"
                 displayName="NixIDEA Settings"

@@ -7,12 +7,32 @@ import org.jetbrains.annotations.NotNull;
 import org.nixos.idea.psi.NixStringText;
 import org.nixos.idea.psi.NixTypes;
 
+import java.util.Set;
+import java.util.regex.Pattern;
+
 /**
  * Utilities for strings in the Nix Expression Language.
  */
 public final class NixStringUtil {
 
+    private static final Pattern IDENTIFIER = Pattern.compile("[a-zA-Z_][a-zA-Z0-9_'-]*");
+    private static final Set<String> KEYWORDS = Set.of(
+            "if", "then", "else", "assert", "with", "let", "in", "rec", "inherit", "or");
+
     private NixStringUtil() {} // Cannot be instantiated
+
+    /**
+     * Returns whether the given string can be used as an identifier without quotes.
+     * Keywords are not considered identifiers by this method.
+     * This includes {@code or}, even though the Nix parser accepts it in some places.
+     *
+     * @param name the string to check
+     * @return {@code true} if the string can be written without quotes in variable names and attribute paths
+     */
+    @Contract(pure = true)
+    public static boolean isIdentifier(@NotNull CharSequence name) {
+        return IDENTIFIER.matcher(name).matches() && !KEYWORDS.contains(name.toString());
+    }
 
     /**
      * Returns the source code for a string in the Nix Expression Language.

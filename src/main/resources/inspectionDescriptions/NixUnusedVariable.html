@@ -1,0 +1,12 @@
+<html>
+<body>
+Reports variables declared in <code>let</code>-expressions and function parameters which are never used.
+Variables starting with an underscore (<code>_</code>) are ignored.
+Unused attributes of function arguments (e.g. <code>{ x }: ...</code>) are only reported when enabled in the options,
+as they are often part of the interface of the function.
+<p>Example:</p>
+<pre><code>let unused = 1; in x: 42</code></pre>
+<p>This inspection requires the symbol support of NixIDEA, which is currently a preview feature.
+You can enable it in <em>Settings | Languages &amp; Frameworks | Nix | Symbols</em>.</p>
+</body>
+</html>

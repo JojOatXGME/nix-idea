@@ -1,0 +1,11 @@
+<html>
+<body>
+Reports URLs which are not enclosed in quotes.
+Unquoted URLs are deprecated by <a href="https://github.com/NixOS/rfcs/pull/45">RFC 45</a>,
+and can be disabled with the experimental feature <code>no-url-literals</code>.
+<p>Example:</p>
+<pre><code>fetchTarball https://example.com/archive.tar.gz</code></pre>
+<p>After the quick-fix is applied:</p>
+<pre><code>fetchTarball "https://example.com/archive.tar.gz"</code></pre>
+</body>
+</html>

@@ -1,0 +1,9 @@
+<html>
+<body>
+Reports quoted attribute names which would also be valid without quotes.
+<p>Example:</p>
+<pre><code>{ "foo" = 1; bar = x."baz"; }</code></pre>
+<p>After the quick-fix is applied:</p>
+<pre><code>{ foo = 1; bar = x.baz; }</code></pre>
+</body>
+</html>
