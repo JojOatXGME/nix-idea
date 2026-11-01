@@ -5,6 +5,7 @@
 ### Added
 
 - Support for experimental pipe operators ([#106](https://github.com/NixOS/nix-idea/issues/106))
+- Structure view and breadcrumbs for attribute sets and `let` bindings
 
 ### Changed
 

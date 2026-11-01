@@ -51,6 +51,12 @@
                 language="Nix"
                 implementationClass="org.nixos.idea.lang.NixFoldingBuilder"/>
 
+        <lang.psiStructureViewFactory
+                language="Nix"
+                implementationClass="org.nixos.idea.lang.structure.NixStructureViewFactory"/>
+
+        <breadcrumbsInfoProvider implementation="org.nixos.idea.lang.structure.NixBreadcrumbsProvider"/>
+
         <searcher forClass="com.intellij.find.usages.api.UsageSearchParameters"
                   implementationClass="org.nixos.idea.lang.references.NixUsageSearcher"/>
 
