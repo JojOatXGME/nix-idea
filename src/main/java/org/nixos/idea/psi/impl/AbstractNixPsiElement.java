@@ -8,10 +8,13 @@ import com.intellij.psi.util.CachedValueProvider;
 import com.intellij.psi.util.CachedValuesManager;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import org.nixos.idea.lang.references.NixBuiltinAttributeReference;
 import org.nixos.idea.lang.references.NixScopeReference;
 import org.nixos.idea.lang.references.NixSymbolDeclaration;
 import org.nixos.idea.lang.references.NixSymbolReference;
 import org.nixos.idea.lang.references.Scope;
+import org.nixos.idea.psi.NixAttr;
+import org.nixos.idea.psi.NixAttrPath;
 import org.nixos.idea.psi.NixBindInherit;
 import org.nixos.idea.psi.NixExpr;
 import org.nixos.idea.psi.NixExprSelect;
@@ -64,9 +67,13 @@ abstract class AbstractNixPsiElement extends ASTWrapperPsiElement implements Nix
             return List.of();
         } else if (this instanceof NixExprVar) {
             return List.of(new NixScopeReference(this, this, getText()));
-        } else if (this instanceof NixExprSelect) {
-            // TODO: Attribute reference support
-            return List.of();
+        } else if (this instanceof NixExprSelect select) {
+            // TODO: Attribute reference support (except for builtins)
+            NixAttrPath attrPath = select.getAttrPath();
+            NixAttr firstAttr = attrPath == null ? null : attrPath.getFirstAttr();
+            String attributeName = firstAttr == null ? null : NixPsiUtil.getAttributeName(firstAttr);
+            return attributeName == null ? List.of()
+                    : NixBuiltinAttributeReference.create(this, firstAttr, select.getValue(), attributeName);
         } else if (this instanceof NixBindInherit bindInherit) {
             NixExpr accessedObject = bindInherit.getSource();
             if (accessedObject == null) {
@@ -79,8 +86,12 @@ abstract class AbstractNixPsiElement extends ASTWrapperPsiElement implements Nix
                     }
                 }).toList();
             } else {
-                // TODO: Attribute reference support
-                return List.of();
+                // TODO: Attribute reference support (except for builtins)
+                return bindInherit.getAttributes().stream().flatMap(attr -> {
+                    String attributeName = NixPsiUtil.getAttributeName(attr);
+                    return attributeName == null ? Stream.empty()
+                            : NixBuiltinAttributeReference.create(this, attr, accessedObject, attributeName).stream();
+                }).toList();
             }
         } else {
             return List.of();

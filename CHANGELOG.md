@@ -4,6 +4,8 @@
 
 ### Added
 
+- Quick documentation for builtins, based on the documentation shipped with Nix (requires the symbol preview)
+
 ### Changed
 
 ### Deprecated

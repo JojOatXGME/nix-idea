@@ -6,6 +6,7 @@ import com.intellij.model.Pointer;
 import com.intellij.model.Symbol;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import org.nixos.idea.lang.builtins.NixBuiltin;
 
 @SuppressWarnings("UnstableApiUsage")
@@ -21,6 +22,16 @@ public abstract sealed class NixSymbol implements Symbol, SearchTarget
 
     @Contract(pure = true)
     public abstract @NotNull String getName();
+
+    /**
+     * Returns the builtin represented by this symbol.
+     *
+     * @return The builtin, or {@code null} if this symbol does not represent a builtin.
+     */
+    @Contract(pure = true)
+    public @Nullable NixBuiltin getBuiltin() {
+        return null;
+    }
 
     @Override
     public abstract @NotNull Pointer<? extends NixSymbol> createPointer();

@@ -208,6 +208,33 @@ public final class NixBuiltin {
         return highlightingType;
     }
 
+    /**
+     * Returns the version of Nix which introduced this builtin.
+     *
+     * @return Version of Nix which introduced the builtin, or {@code null} if it was available since Nix 2.4.
+     */
+    public @Nullable NixVersion since() {
+        return since;
+    }
+
+    /**
+     * Returns the experimental feature which must be enabled to use this builtin.
+     *
+     * @return Name of the experimental feature, or {@code null} if the builtin does not require one.
+     */
+    public @Nullable String featureFlag() {
+        return featureFlag;
+    }
+
+    /**
+     * Returns whether the builtin is also available in the global scope (i.e. without “builtins.” prefix).
+     *
+     * @return {@code true} if the builtin is available in the global scope.
+     */
+    public boolean global() {
+        return global;
+    }
+
     //endregion
     //region Static members
 

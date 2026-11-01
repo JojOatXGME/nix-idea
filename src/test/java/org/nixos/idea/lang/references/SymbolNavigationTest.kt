@@ -221,6 +221,25 @@ class SymbolNavigationTest : AbstractSymbolNavigationTests() {
         }
 
         @TestFactory
+        @DisplayName("builtins.map")
+        fun builtins_attribute() = test {
+            code = """
+                # <builtin>map</builtin>
+                [ builtins.<ref>map</ref> (builtins.<ref>map</ref> f) builtins.unknown ]
+                """.trimIndent()
+        }
+
+        @TestFactory
+        @DisplayName("inherit (builtins) map")
+        fun builtins_inherit() = test {
+            code = """
+                # <builtin>map</builtin>
+                let inherit (builtins) <ref>map</ref>; in
+                builtins.<ref>map</ref>
+                """.trimIndent()
+        }
+
+        @TestFactory
         @DisplayName("null")
         fun null_direct() = test {
             code = """
@@ -259,6 +278,14 @@ class SymbolNavigationTest : AbstractSymbolNavigationTests() {
                 let subject = "..."; in
                 let inherit (unknown-value) subject; in
                 rec { <symbol><decl>subject</decl></symbol> = <ref>subject</ref>; }
+                """.trimIndent()
+        }
+
+        @TestFactory
+        fun shadowed_builtins_attribute() = test {
+            code = """
+                let <symbol><decl>builtins</decl></symbol> = "..."; in
+                <ref>builtins</ref>.map
                 """.trimIndent()
         }
 

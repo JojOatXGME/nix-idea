@@ -25,6 +25,11 @@ final class NixBuiltinSymbol extends NixSymbol
     }
 
     @Override
+    public @NotNull NixBuiltin getBuiltin() {
+        return myBuiltin;
+    }
+
+    @Override
     public @NotNull Pointer<NixBuiltinSymbol> createPointer() {
         return this;
     }
