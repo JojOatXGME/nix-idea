@@ -4,6 +4,9 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.nixos.idea.util.NixVersion;
 
+import java.util.Collection;
+import java.util.Comparator;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -158,6 +161,11 @@ public final class NixBuiltin {
             builtin("unsafeGetAttrPos"),
             builtin("zipAttrsWith", NixVersion.V2_06));
 
+    private static final List<NixBuiltin> GLOBAL_BUILTINS = BUILTINS.values().stream()
+            .filter(builtin -> builtin.global)
+            .sorted(Comparator.comparing(NixBuiltin::name))
+            .toList();
+
     //endregion
     //region Factories
 
@@ -213,6 +221,15 @@ public final class NixBuiltin {
 
     public static @Nullable NixBuiltin resolveBuiltin(@NotNull String name) {
         return BUILTINS.get(name);
+    }
+
+    /**
+     * Returns all builtins which are available in the global scope (i.e. without “builtins.” prefix).
+     *
+     * @return Builtins of the global scope.
+     */
+    public static @NotNull Collection<NixBuiltin> globals() {
+        return GLOBAL_BUILTINS;
     }
 
     public static @Nullable NixBuiltin resolveGlobal(@NotNull String name) {

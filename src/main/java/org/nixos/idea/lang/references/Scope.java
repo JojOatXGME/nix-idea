@@ -11,6 +11,8 @@ import org.nixos.idea.psi.NixExprWith;
 import org.nixos.idea.psi.NixPsiElement;
 
 import java.util.Collection;
+import java.util.LinkedHashMap;
+import java.util.Map;
 
 /**
  * Scope used to lookup accessible variables.
@@ -56,11 +58,32 @@ public abstract sealed class Scope {
         return ContainerUtil.createMaybeSingletonList(result);
     }
 
+    /**
+     * Returns all variables which are accessible in this scope.
+     * Variables declared in inner scopes shadow variables with the same name in outer scopes.
+     * Variables of inner scopes come first in the iteration order of the returned map.
+     *
+     * @return Map from variable name to the symbol the variable resolves to.
+     */
+    @Contract(pure = true)
+    public final @NotNull Map<String, NixSymbol> collectVariables() {
+        Map<String, NixSymbol> result = new LinkedHashMap<>();
+        collectVariables0(result);
+        return result;
+    }
+
     //endregion
     //region Abstract methods
 
     @Contract(pure = true)
     abstract @Nullable NixSymbol resolveVariable0(@NotNull String variableName);
+
+    /**
+     * Adds all variables of this scope to the given map, unless the map already contains a variable with the same name.
+     *
+     * @param result The map to which the variables shall be added.
+     */
+    abstract void collectVariables0(@NotNull Map<String, NixSymbol> result);
 
     //endregion
     //region Subclasses
@@ -81,6 +104,13 @@ public abstract sealed class Scope {
             // TODO: Ideally, we should filter the built-ins based on the used version of Nix.
             NixBuiltin builtin = NixBuiltin.resolveGlobal(variableName);
             return builtin == null ? null : NixSymbol.builtin(builtin);
+        }
+
+        @Override
+        void collectVariables0(@NotNull Map<String, NixSymbol> result) {
+            for (NixBuiltin builtin : NixBuiltin.globals()) {
+                result.putIfAbsent(builtin.name(), NixSymbol.builtin(builtin));
+            }
         }
     }
 
@@ -122,6 +152,20 @@ public abstract sealed class Scope {
             NixSymbol symbol = getElement().getSymbolForScope(variableName);
             return symbol == null ? getParent().resolveVariable0(variableName) : symbol;
         }
+
+        @Override
+        void collectVariables0(@NotNull Map<String, NixSymbol> result) {
+            NixDeclarationHost element = getElement();
+            for (String variableName : element.getVariableNamesForScope()) {
+                if (!result.containsKey(variableName)) {
+                    NixSymbol symbol = element.getSymbolForScope(variableName);
+                    if (symbol != null) {
+                        result.put(variableName, symbol);
+                    }
+                }
+            }
+            getParent().collectVariables0(result);
+        }
     }
 
     private static final class With extends Psi<NixExprWith> {
@@ -133,6 +177,12 @@ public abstract sealed class Scope {
         public @Nullable NixSymbol resolveVariable0(@NotNull String variableName) {
             // TODO with-expression reference support
             return getParent().resolveVariable0(variableName);
+        }
+
+        @Override
+        void collectVariables0(@NotNull Map<String, NixSymbol> result) {
+            // TODO with-expression reference support
+            getParent().collectVariables0(result);
         }
     }
 

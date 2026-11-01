@@ -5,6 +5,7 @@
 ### Added
 
 - Support for experimental pipe operators ([#106](https://github.com/NixOS/nix-idea/issues/106))
+- Code completion for variables in scope and global builtins
 
 ### Changed
 
