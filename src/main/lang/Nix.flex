@@ -102,6 +102,8 @@ MCOMMENT=\/\*([^*]|\*[^\/])*\*\/
   // we're delegating back to the parent state
   // PATH_END is an empty-length token to signal the end of the path
   [^]                   { popState(PATH); yypushback(yylength()); return PATH_END; }
+  // the end of the file also stops lexing of a PATH
+  <<EOF>>               { popState(PATH); return PATH_END; }
 }
 
 <YYINITIAL, BLOCK, INTERPOLATION> {

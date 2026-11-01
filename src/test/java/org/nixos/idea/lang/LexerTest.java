@@ -20,6 +20,18 @@ public final class LexerTest extends LexerTestCase {
             """);
   }
 
+  public void testPathAtEndOfFile() {
+    doTest("./a/${b}/c", """
+            PATH_SEGMENT ('./a/')
+            $ ('$')
+            { ('{')
+            ID ('b')
+            } ('}')
+            PATH_SEGMENT ('/')
+            PATH_SEGMENT ('c')
+            PATH_END ('')""");
+  }
+
   @Override
   protected Lexer createLexer() {
     return new NixLexer();
