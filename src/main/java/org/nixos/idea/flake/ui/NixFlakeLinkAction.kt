@@ -19,7 +19,7 @@ class NixFlakeLinkAction : DumbAwareAction() {
 
     override fun actionPerformed(e: AnActionEvent) {
         val project = e.project ?: return
-        val descriptor = FileChooserDescriptorFactory.createSingleFileDescriptor()
+        val descriptor = FileChooserDescriptorFactory.singleFile()
             .withFileFilter { it.name == NixFlakeConstants.FLAKE_FILE_NAME }
             .withTitle("Select flake.nix")
         val file = FileChooser.chooseFile(descriptor, project, null) ?: return

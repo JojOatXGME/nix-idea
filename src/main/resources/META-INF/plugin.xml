@@ -72,6 +72,9 @@
                 instance="org.nixos.idea.settings.NixIDEASettings"/>
 
         <applicationService
+                serviceImplementation="org.nixos.idea.settings.NixToolingSettings"/>
+
+        <applicationService
                 serviceImplementation="org.nixos.idea.settings.NixExternalFormatterSettings"/>
 
         <applicationService
@@ -85,6 +88,12 @@
 
         <applicationConfigurable
                 parentId="org.nixos.idea.settings.ui.NixLangSettingsConfigurable"
+                displayName="Environment"
+                id="org.nixos.idea.settings.ui.NixToolingConfigurable"
+                instance="org.nixos.idea.settings.ui.NixToolingConfigurable"/>
+
+        <applicationConfigurable
+                parentId="org.nixos.idea.settings.ui.NixLangSettingsConfigurable"
                 displayName="External Formatter"
                 id="org.nixos.idea.settings.ui.NixExternalFormatterConfigurable"
                 instance="org.nixos.idea.settings.ui.NixExternalFormatterConfigurable"/>
@@ -94,15 +103,6 @@
                 displayName="Symbols"
                 id="org.nixos.idea.settings.ui.NixSymbolConfigurable"
                 instance="org.nixos.idea.settings.ui.NixSymbolConfigurable"/>
-
-        <applicationService
-                serviceImplementation="org.nixos.idea.settings.NixToolingSettings"/>
-
-        <applicationConfigurable
-                parentId="org.nixos.idea.settings.ui.NixLangSettingsConfigurable"
-                displayName="Environment"
-                id="org.nixos.idea.settings.ui.NixToolingConfigurable"
-                instance="org.nixos.idea.settings.ui.NixToolingConfigurable"/>
 
         <colorSettingsPage
                 implementation="org.nixos.idea.settings.ui.NixColorSettingsPage"/>

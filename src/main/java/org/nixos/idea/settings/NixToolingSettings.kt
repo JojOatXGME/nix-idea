@@ -9,9 +9,6 @@ import com.intellij.openapi.components.Storage
 
 /**
  * Machine-specific settings of how the plugin runs the `nix` CLI.
- *
- * TODO(decision): Additional environment variables and global `nix` options (e.g. `--option`, `--impure`) could be
- *  added here as well, see the review discussion on the flake import PR.
  */
 @State(
     name = "NixToolingSettings",
@@ -20,10 +17,10 @@ import com.intellij.openapi.components.Storage
 class NixToolingSettings : SimplePersistentStateComponent<NixToolingSettings.State>(State()) {
 
     class State : BaseState() {
-        /** Path of the `nix` executable. Empty means auto-detection, see [org.nixos.idea.util.NixExecutable]. */
         var nixExecutable by string()
     }
 
+    /** Path of the `nix` executable. Empty means auto-detection, see [org.nixos.idea.util.NixExecutable]. */
     var nixExecutable: String
         get() = state.nixExecutable.orEmpty()
         set(value) {
