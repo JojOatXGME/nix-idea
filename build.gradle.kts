@@ -4,6 +4,13 @@ import org.jetbrains.intellij.platform.gradle.IntelliJPlatformType
 import org.jetbrains.intellij.platform.gradle.TestFrameworkType
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 
+// Lock versions of Gradle plugins (see dependencyLocking below)
+buildscript {
+    configurations.classpath {
+        resolutionStrategy.activateDependencyLocking()
+    }
+}
+
 plugins {
     id("java")
     kotlin("jvm") version embeddedKotlinVersion
@@ -38,6 +45,17 @@ kotlin {
     compilerOptions {
         jvmTarget.set(JvmTarget.JVM_21)
     }
+}
+
+// Lock versions of all dependencies, including transitive ones. To update the lock files, run
+//   ./gradlew dependencies buildEnvironment --write-locks
+// -> https://docs.gradle.org/current/userguide/dependency_locking.html
+// Note that the included build in gradle/plugins is not locked on its own. Its dependencies end up in the classpath of
+// this build script, which is covered by buildscript-gradle.lockfile.
+// The IDEs used by the Plugin Verifier are excluded,
+// as they are defined in gradle/productsReleases.txt or overridden on the command line.
+configurations.matching { !it.name.startsWith("intellijPluginVerifierIdes") }.configureEach {
+    resolutionStrategy.activateDependencyLocking()
 }
 
 // Configure project's dependencies
