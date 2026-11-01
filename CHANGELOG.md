@@ -5,6 +5,8 @@
 ### Added
 
 - Support for experimental pipe operators ([#106](https://github.com/NixOS/nix-idea/issues/106))
+- Automatic indentation when pressing <kbd>Enter</kbd> or typing a closing bracket ([#89](https://github.com/NixOS/nix-idea/issues/89))
+- Code style settings for the indentation of Nix files, defaulting to two spaces
 
 ### Changed
 
