@@ -87,6 +87,16 @@
 
         <formattingService implementation="org.nixos.idea.format.NixExternalFormatter"/>
 
+        <lineIndentProvider implementation="org.nixos.idea.format.NixLineIndentProvider"/>
+
+        <enterBetweenBracesDelegate
+                language="Nix"
+                implementationClass="org.nixos.idea.format.NixEnterBetweenBracesDelegate"/>
+
+        <langCodeStyleSettingsProvider implementation="org.nixos.idea.format.NixLanguageCodeStyleSettingsProvider"/>
+
+        <typedHandler implementation="org.nixos.idea.format.NixTypedHandler"/>
+
         <notificationGroup id="NixIDEA" displayType="BALLOON"/>
     </extensions>
 
