@@ -14,6 +14,10 @@
 
 ### Fixed
 
+- Parsing of paths at the very end of a file
+- Spaces between tokens are now inserted or omitted correctly when the IDE generates or joins code,
+  e.g. `a -b` is no longer joined to the identifier `a-b`
+
 ### Security
 
 ## [0.4.0.22] - 2026-07-06

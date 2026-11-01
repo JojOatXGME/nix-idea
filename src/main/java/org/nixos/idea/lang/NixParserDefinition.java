@@ -8,14 +8,11 @@ import com.intellij.openapi.project.Project;
 import com.intellij.psi.FileViewProvider;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiFile;
-import com.intellij.psi.tree.IElementType;
 import com.intellij.psi.tree.IFileElementType;
 import com.intellij.psi.tree.TokenSet;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 import org.nixos.idea.file.NixFile;
 import org.nixos.idea.psi.NixTokenSets;
-import org.nixos.idea.psi.NixTokenType;
 import org.nixos.idea.psi.NixTypes;
 
 public class NixParserDefinition implements ParserDefinition {
@@ -59,39 +56,13 @@ public class NixParserDefinition implements ParserDefinition {
 
     @Override
     public @NotNull SpaceRequirements spaceExistenceTypeBetweenTokens(ASTNode left, ASTNode right) {
-        NixTokenType leftType = asNixTokenType(left.getElementType());
-        NixTokenType rightType = asNixTokenType(right.getElementType());
-        if (leftType == NixTypes.SCOMMENT) {
-            return SpaceRequirements.MUST_LINE_BREAK;
-        }
-        if (leftType == NixTypes.DOLLAR && rightType == NixTypes.LCURLY) {
-            return SpaceRequirements.MUST_NOT;
-        }
-        else if (leftType == NixTypes.PATH_SEGMENT) {
-            // path segment, interpolation or PATH_END on the right
-            return SpaceRequirements.MUST_NOT;
-        }
-        else if (rightType == NixTypes.PATH_END) {
-            // path segment or interpolation on the left
-            return SpaceRequirements.MUST_NOT;
-        }
-        else if (NixTokenSets.MIGHT_COLLAPSE_WITH_ID.contains(leftType) &&
-                 NixTokenSets.MIGHT_COLLAPSE_WITH_ID.contains(rightType)) {
-            return SpaceRequirements.MUST;
-        }
-        else {
-            return SpaceRequirements.MAY;
-        }
+        return NixSpaceRequirements.between(left, right);
     }
 
     @NotNull
     @Override
     public PsiElement createElement(ASTNode node) {
         return NixTypes.Factory.createElement(node);
-    }
-
-    private static @Nullable NixTokenType asNixTokenType(IElementType elementType) {
-        return elementType instanceof NixTokenType ? (NixTokenType) elementType : null;
     }
 }
 
