@@ -54,6 +54,10 @@
         <searcher forClass="com.intellij.find.usages.api.UsageSearchParameters"
                   implementationClass="org.nixos.idea.lang.references.NixUsageSearcher"/>
 
+        <completion.contributor
+                language="Nix"
+                implementationClass="org.nixos.idea.lang.completion.NixCompletionContributor"/>
+
         <psi.referenceContributor
                 language="Nix"
                 implementation="org.nixos.idea.imports.NixFilePathReferenceContributor"/>

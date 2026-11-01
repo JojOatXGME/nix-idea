@@ -25,8 +25,9 @@ import java.lang.invoke.MethodHandles;
 import java.lang.invoke.VarHandle;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
-import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -65,6 +66,12 @@ abstract class AbstractNixDeclarationHost extends AbstractNixPsiElement implemen
         // Note: When we want to support dynamic attributes in the future, they must be ignored by this method.
         assert isDeclaringVariables() : "getSymbolForScope(...) must not be called when isDeclaringVariables() returns false";
         return getSymbols().getSymbolForScope(variableName);
+    }
+
+    @Override
+    public @NotNull Collection<String> getVariableNamesForScope() {
+        assert isDeclaringVariables() : "getVariableNamesForScope() must not be called when isDeclaringVariables() returns false";
+        return getSymbols().getVariableNamesForScope();
     }
 
     @Override
@@ -145,7 +152,7 @@ abstract class AbstractNixDeclarationHost extends AbstractNixPsiElement implemen
         private final @NotNull Map<List<String>, NixUserSymbol> mySymbols = new HashMap<>();
         private final @NotNull Map<List<String>, List<NixSymbolDeclaration>> myDeclarationsBySymbol = new HashMap<>();
         private final @NotNull Map<NixPsiElement, List<NixSymbolDeclaration>> myDeclarationsByElement = new HashMap<>();
-        private final @NotNull Set<String> myVariables = new HashSet<>();
+        private final @NotNull Set<String> myVariables = new LinkedHashSet<>();
         private final long mySettingsModificationCount;
 
         private Symbols(@NotNull NixSymbolSettings settings) {
@@ -217,6 +224,10 @@ abstract class AbstractNixDeclarationHost extends AbstractNixPsiElement implemen
 
         private @Nullable NixUserSymbol getSymbolForScope(@NotNull String variableName) {
             return myVariables.contains(variableName) ? mySymbols.get(List.of(variableName)) : null;
+        }
+
+        private @NotNull Collection<String> getVariableNamesForScope() {
+            return Collections.unmodifiableSet(myVariables);
         }
 
         private @Nullable NixUserSymbol getSymbol(@NotNull List<String> attributePath) {
