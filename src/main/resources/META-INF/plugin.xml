@@ -4,6 +4,8 @@
     <depends>com.intellij.modules.lang</depends>
     <depends optional="true" config-file="nix-idea-lsp.xml">com.intellij.modules.lsp</depends>
 
+    <resource-bundle>messages.NixBundle</resource-bundle>
+
     <extensions defaultExtensionNs="com.intellij">
 
         <fileType
@@ -70,11 +72,17 @@
         <applicationService
                 serviceImplementation="org.nixos.idea.settings.NixSymbolSettings"/>
 
-        <applicationConfigurable
+        <groupConfigurable
                 parentId="language"
-                displayName="Nix"
-                id="org.nixos.idea.settings.ui.NixLangSettingsConfigurable"
-                instance="org.nixos.idea.settings.ui.NixLangSettingsConfigurable"/>
+                displayNameKey="nix.name"
+                descriptionKey="nix.settings.group.description"
+                id="org.nixos.idea.settings.ui.NixLangSettingsConfigurable"/>
+
+        <applicationConfigurable
+                parentId="org.nixos.idea.settings.ui.NixLangSettingsConfigurable"
+                displayName="External Formatter"
+                id="org.nixos.idea.settings.ui.NixExternalFormatterConfigurable"
+                instance="org.nixos.idea.settings.ui.NixExternalFormatterConfigurable"/>
 
         <applicationConfigurable
                 parentId="org.nixos.idea.settings.ui.NixLangSettingsConfigurable"

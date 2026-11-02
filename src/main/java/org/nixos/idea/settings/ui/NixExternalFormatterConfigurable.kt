@@ -23,8 +23,8 @@ import org.nixos.idea.settings.ui.UiDslExtensions.validateOnReset
 import org.nixos.idea.settings.ui.UiDslExtensions.validateWhenTextChanged
 import org.nixos.idea.settings.ui.UiDslExtensions.warnOnInput
 
-class NixLangSettingsConfigurable :
-    BoundSearchableConfigurable("Nix", "org.nixos.idea.settings.ui.NixLangSettingsConfigurable"),
+class NixExternalFormatterConfigurable :
+    BoundSearchableConfigurable("External Formatter", "org.nixos.idea.settings.ui.NixExternalFormatterConfigurable"),
     Configurable.Beta {
 
     override fun createPanel() = panel {
