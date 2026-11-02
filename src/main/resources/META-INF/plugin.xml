@@ -1,8 +1,15 @@
-<idea-plugin>
+<idea-plugin xmlns:xi="http://www.w3.org/2001/XInclude">
 
     <depends>com.intellij.modules.platform</depends>
     <depends>com.intellij.modules.lang</depends>
     <depends optional="true" config-file="nix-idea-lsp.xml">com.intellij.modules.lsp</depends>
+    <!-- The flake import uses `com.intellij.openapi.externalSystem.*` (unlinked-project detection, auto-import tracker).
+         In 2025.2 these are part of the lang platform (PlatformLangPlugin.xml includes ExternalSystem.xml), so
+         com.intellij.modules.lang is enough. Newer platform versions split them into the content module
+         `intellij.platform.externalSystem`. TODO: Verify with the Plugin Verifier against all IDEs in productsReleases.txt. -->
+    <xi:include href="/META-INF/nix-idea-flake.xml" xpointer="xpointer(/idea-plugin/*)"/>
+
+    <resource-bundle>messages.NixBundle</resource-bundle>
 
     <extensions defaultExtensionNs="com.intellij">
 
@@ -65,16 +72,31 @@
                 instance="org.nixos.idea.settings.NixIDEASettings"/>
 
         <applicationService
+                serviceImplementation="org.nixos.idea.settings.NixToolingSettings"/>
+
+        <applicationService
                 serviceImplementation="org.nixos.idea.settings.NixExternalFormatterSettings"/>
 
         <applicationService
                 serviceImplementation="org.nixos.idea.settings.NixSymbolSettings"/>
 
-        <applicationConfigurable
+        <groupConfigurable
                 parentId="language"
-                displayName="Nix"
-                id="org.nixos.idea.settings.ui.NixLangSettingsConfigurable"
-                instance="org.nixos.idea.settings.ui.NixLangSettingsConfigurable"/>
+                displayNameKey="nix.name"
+                descriptionKey="nix.settings.group.description"
+                id="org.nixos.idea.settings.ui.NixLangSettingsConfigurable"/>
+
+        <applicationConfigurable
+                parentId="org.nixos.idea.settings.ui.NixLangSettingsConfigurable"
+                displayName="Environment"
+                id="org.nixos.idea.settings.ui.NixToolingConfigurable"
+                instance="org.nixos.idea.settings.ui.NixToolingConfigurable"/>
+
+        <applicationConfigurable
+                parentId="org.nixos.idea.settings.ui.NixLangSettingsConfigurable"
+                displayName="External Formatter"
+                id="org.nixos.idea.settings.ui.NixExternalFormatterConfigurable"
+                instance="org.nixos.idea.settings.ui.NixExternalFormatterConfigurable"/>
 
         <applicationConfigurable
                 parentId="org.nixos.idea.settings.ui.NixLangSettingsConfigurable"

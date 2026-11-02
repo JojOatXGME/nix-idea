@@ -1,0 +1,57 @@
+<idea-plugin>
+    <!-- Nix Flake import. See org.nixos.idea.flake.NixFlakeConstants for an overview. -->
+    <extensions defaultExtensionNs="com.intellij">
+
+        <!-- Detect flake.nix: notification with "Load", or auto-import when opening a project with an empty model. -->
+        <externalSystemUnlinkedProjectAware
+                implementation="org.nixos.idea.flake.NixFlakeUnlinkedProjectAware"/>
+
+        <!-- Registers linked flakes with the auto-import tracker (re-import on changes of flake.nix / flake.lock). -->
+        <postStartupActivity
+                implementation="org.nixos.idea.flake.sync.NixFlakeStartupActivity"/>
+
+        <!-- Makes the sources of flake inputs indexed and visible under "External Libraries". -->
+        <additionalLibraryRootsProvider
+                implementation="org.nixos.idea.flake.model.NixFlakeInputsRootsProvider"/>
+
+        <!-- "Build | Build Project" runs `nix build` for modules created by the import. -->
+        <projectTaskRunner
+                id="nixFlake"
+                implementation="org.nixos.idea.flake.build.NixFlakeProjectTaskRunner"/>
+
+        <toolWindow
+                id="Nix Flake"
+                anchor="right"
+                icon="/icons/nixSnowflake.svg"
+                factoryClass="org.nixos.idea.flake.ui.NixFlakeToolWindowFactory"/>
+    </extensions>
+
+    <applicationListeners>
+        <!-- Re-runs the import once the user trusts the project. -->
+        <listener class="org.nixos.idea.flake.sync.NixFlakeTrustListener"
+                  topic="com.intellij.ide.trustedProjects.TrustedProjectsListener"/>
+    </applicationListeners>
+
+    <actions>
+        <action id="NixFlake.Reload"
+                class="org.nixos.idea.flake.ui.NixFlakeReloadAction"
+                text="Reload All Nix Flakes"
+                description="Re-imports all linked Nix flakes"
+                icon="AllIcons.Actions.Refresh"/>
+        <action id="NixFlake.Link"
+                class="org.nixos.idea.flake.ui.NixFlakeLinkAction"
+                text="Link Nix Flake…"
+                description="Imports a flake.nix into the project"
+                icon="AllIcons.General.Add"/>
+        <action id="NixFlake.Unlink"
+                class="org.nixos.idea.flake.ui.NixFlakeUnlinkAction"
+                text="Unlink Nix Flake…"
+                description="Removes selected Nix flakes from the project"
+                icon="AllIcons.General.Remove"/>
+        <group id="NixFlake.ToolWindow.Toolbar">
+            <reference ref="NixFlake.Reload"/>
+            <reference ref="NixFlake.Link"/>
+            <reference ref="NixFlake.Unlink"/>
+        </group>
+    </actions>
+</idea-plugin>
