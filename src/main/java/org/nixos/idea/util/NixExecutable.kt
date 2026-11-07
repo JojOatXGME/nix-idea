@@ -16,6 +16,7 @@ object NixExecutable {
 
     const val DEFAULT_PROFILE_NIX: String = "/nix/var/nix/profiles/default/bin/nix"
 
+    @JvmStatic
     fun resolve(): String {
         val configured = NixToolingSettings.getInstance().nixExecutable
         if (configured.isNotEmpty()) return configured
@@ -24,6 +25,7 @@ object NixExecutable {
         return "nix"
     }
 
+    @JvmStatic
     fun resolveDefault(): String? {
         PathEnvironmentVariableUtil.findInPath("nix")?.let { return it.path }
         if (Files.isExecutable(Path.of(DEFAULT_PROFILE_NIX))) return DEFAULT_PROFILE_NIX

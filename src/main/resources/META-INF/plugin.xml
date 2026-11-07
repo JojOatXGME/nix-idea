@@ -78,6 +78,9 @@
                 serviceImplementation="org.nixos.idea.settings.NixExternalFormatterSettings"/>
 
         <applicationService
+                serviceImplementation="org.nixos.idea.settings.NixFlakeSettings"/>
+
+        <applicationService
                 serviceImplementation="org.nixos.idea.settings.NixSymbolSettings"/>
 
         <groupConfigurable
@@ -97,6 +100,12 @@
                 displayName="External Formatter"
                 id="org.nixos.idea.settings.ui.NixExternalFormatterConfigurable"
                 instance="org.nixos.idea.settings.ui.NixExternalFormatterConfigurable"/>
+
+        <applicationConfigurable
+                parentId="org.nixos.idea.settings.ui.NixLangSettingsConfigurable"
+                displayName="Flakes"
+                id="org.nixos.idea.settings.ui.NixFlakeConfigurable"
+                instance="org.nixos.idea.settings.ui.NixFlakeConfigurable"/>
 
         <applicationConfigurable
                 parentId="org.nixos.idea.settings.ui.NixLangSettingsConfigurable"
