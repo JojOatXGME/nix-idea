@@ -17,5 +17,10 @@ class NixFlakeConfigurable :
                 .bindSelected(settings::autoImport)
                 .comment("Automatically evaluate <code>flake.nix</code> files found in the project directory")
         }
+        row {
+            checkBox("<html>Use <code>nix fmt</code> for code formatting</html>")
+                .bindSelected(settings::useNixFmt)
+                .comment("Build and use the formatter defined in imported <code>flake.nix</code> files")
+        }
     }
 }

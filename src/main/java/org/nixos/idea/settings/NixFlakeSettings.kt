@@ -12,6 +12,7 @@ class NixFlakeSettings : SimplePersistentStateComponent<NixFlakeSettings.State>(
 
     class State : BaseState() {
         var autoImport by property(false)
+        var useNixFmt by property(true)
     }
 
     companion object {
@@ -22,5 +23,6 @@ class NixFlakeSettings : SimplePersistentStateComponent<NixFlakeSettings.State>(
     }
 
     var autoImport: Boolean by delegate(State::autoImport)
+    var useNixFmt: Boolean by delegate(State::useNixFmt)
 
 }

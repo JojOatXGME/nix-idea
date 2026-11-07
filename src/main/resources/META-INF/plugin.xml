@@ -116,7 +116,13 @@
         <colorSettingsPage
                 implementation="org.nixos.idea.settings.ui.NixColorSettingsPage"/>
 
-        <formattingService implementation="org.nixos.idea.format.NixExternalFormatter"/>
+        <formattingService
+                id="org.nixos.idea.format.NixFlakeFormatter"
+                implementation="org.nixos.idea.format.NixFlakeFormatter"/>
+        <formattingService
+                id="org.nixos.idea.format.NixExternalFormatter"
+                implementation="org.nixos.idea.format.NixExternalFormatter"
+                order="after org.nixos.idea.format.NixFlakeFormatter"/>
 
         <notificationGroup id="NixIDEA" displayType="BALLOON"/>
     </extensions>
