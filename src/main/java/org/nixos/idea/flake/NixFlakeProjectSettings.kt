@@ -20,7 +20,7 @@ import org.nixos.idea.settings.NixStoragePaths
  */
 @Service(Service.Level.PROJECT)
 @State(name = "NixLinkedFlakes", storages = [Storage(NixStoragePaths.DEFAULT)])
-class NixLinkedFlakesSettings(private val project: Project) : SimplePersistentStateComponent<NixLinkedFlakesSettings.State>(State()) {
+class NixFlakeProjectSettings(private val project: Project) : SimplePersistentStateComponent<NixFlakeProjectSettings.State>(State()) {
 
     class State : BaseState() {
         /** System-independent paths of directories containing a linked `flake.nix`. */
@@ -63,6 +63,6 @@ class NixLinkedFlakesSettings(private val project: Project) : SimplePersistentSt
         val TOPIC: Topic<Listener> = Topic(Listener::class.java, Topic.BroadcastDirection.NONE)
 
         @JvmStatic
-        fun getInstance(project: Project): NixLinkedFlakesSettings = project.service()
+        fun getInstance(project: Project): NixFlakeProjectSettings = project.service()
     }
 }

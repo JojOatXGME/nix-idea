@@ -10,6 +10,10 @@
         <postStartupActivity
                 implementation="org.nixos.idea.flake.sync.NixFlakeStartupActivity"/>
 
+        <!-- Excludes symlinks into the Nix store (`result` of `nix build`, `.direnv`) from the project. -->
+        <workspaceModel.fileIndexContributor
+                implementation="org.nixos.idea.flake.model.NixStoreSymlinkExcluder"/>
+
         <!-- Makes the sources of flake inputs indexed and visible under "External Libraries". -->
         <additionalLibraryRootsProvider
                 implementation="org.nixos.idea.flake.model.NixFlakeInputsRootsProvider"/>
@@ -24,9 +28,6 @@
                 key="NIX_FLAKE"
                 implementationClass="org.nixos.idea.flake.NixFlakeIconProvider"/>
 
-        <!-- New UI variants of the icons in /icons, see /icons/expui. -->
-        <iconMapper mappingFile="NixIconMappings.json"/>
-
         <toolWindow
                 id="Nix Flake"
                 anchor="right"
@@ -40,8 +41,7 @@
                   topic="com.intellij.ide.trustedProjects.TrustedProjectsListener"/>
     </applicationListeners>
 
-    <!-- Action IDs are prefixed with the plugin ID (`nix-idea`), as recommended by the IntelliJ Platform SDK docs.
-         plugin.xml has no placeholders, and the IDs are also referenced from code, so the prefix is spelled out. -->
+    <!-- Action IDs are prefixed with the plugin ID (`nix-idea`), as recommended by the IntelliJ Platform SDK docs. -->
     <actions>
         <action id="nix-idea.flake.reload"
                 class="org.nixos.idea.flake.ui.NixFlakeReloadAction"

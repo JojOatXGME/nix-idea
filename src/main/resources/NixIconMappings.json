@@ -1,8 +1,0 @@
-{
-  "icons": {
-    "expui": {
-      "nixFlakeToolWindow.svg": "icons/nixFlakeToolWindow.svg",
-      "nixFlakeLoadChanges.svg": "icons/nixFlakeLoadChanges.svg"
-    }
-  }
-}

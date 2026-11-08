@@ -9,7 +9,6 @@ import com.intellij.openapi.roots.ExternalProjectSystemRegistry
 import com.intellij.openapi.vfs.VfsUtilCore
 import com.intellij.platform.backend.workspace.workspaceModel
 import com.intellij.platform.workspace.jps.JpsImportedEntitySource
-import com.intellij.platform.workspace.jps.entities.ContentRootEntity
 import com.intellij.platform.workspace.jps.entities.InheritedSdkDependency
 import com.intellij.platform.workspace.jps.entities.ModuleEntity
 import com.intellij.platform.workspace.jps.entities.ModuleId
@@ -21,15 +20,31 @@ import java.nio.file.Path
 /**
  * Writes the result of an import into the Workspace Model.
  *
- * Each linked flake becomes one module with the flake directory as content root.
- * The module is mostly needed for two reasons:
- *  - "Build Project" creates one `ModuleBuildTask` per module, which [org.nixos.idea.flake.build.NixFlakeProjectTaskRunner] claims.
- *  - The flake directory becomes proper project content, even if the project was opened from a parent directory.
+ * Each linked flake becomes one module, so that "Build Project" creates a `ModuleBuildTask` for it, which
+ * [org.nixos.idea.flake.build.NixFlakeProjectTaskRunner] claims. The runner finds the flake via the module's external
+ * system options (see [getFlakeRoot]).
+ *
+ * The module has no content root. The flake directory is usually already content of another module (the project's
+ * own module, or a Gradle module), and a directory can't belong to two modules: `ProjectFileIndex` maps every file to
+ * exactly one module, and Project Structure reports "Content root is defined for multiple modules". Adding a content
+ * root only if no other module has one would make the result depend on the import order.
+ * Symlinks into the store (`result`) are excluded for all modules by [NixStoreSymlinkExcluder] instead.
+ *
+ * TODO: A flake outside of the project's content roots isn't project content then (no search, no indexing of its
+ *  files). Could be solved with a content root which is only added if no other module contains the directory.
  *
  * Entity source: modules use [JpsImportedEntitySource] with `externalSystemId = NIX_FLAKE`
  * (created via [LegacyBridgeJpsEntitySourceFactory]), like Maven's `WorkspaceProjectImporter`.
- * They are persisted in `.idea`/`*.iml` (or the external project storage in the system directory),
- * marked as imported, and survive a lost Workspace Model cache.
+ * They are persisted, marked as imported, and survive a lost Workspace Model cache.
+ *
+ * Where the module is stored depends on the project-wide "store generated project files externally" option
+ * (`ExternalStorageConfigurationManager`). If it is enabled, imported modules are stored in the IDE system directory
+ * (`external_build_system/`). Otherwise, the `.iml` file is written to the directory passed to
+ * `createEntitySourceForModule`, which is `.idea/modules` here (like Gradle), so the flake directory stays clean.
+ * Gradle enables the option by default when a project is linked, and Maven's importer always enables it.
+ *
+ * TODO(decision): Enable external storage when the first flake is linked, like Maven? It is a project-wide switch, so
+ *  it also moves modules of other build systems.
  *
  * Alternatives considered:
  *  - A custom `data class NixFlakeEntitySource : EntitySource` (what Gradle's new sync and Bazel do) is the cleanest option,
@@ -84,9 +99,9 @@ object NixFlakeWorkspaceModel {
         val root = flake.root ?: return
         val workspaceModel = project.workspaceModel
         val urlManager = workspaceModel.getVirtualFileUrlManager()
-        val rootUrl = urlManager.getOrCreateFromUrl(VfsUtilCore.pathToUrl(root))
+        val moduleFileDir = urlManager.getOrCreateFromUrl(VfsUtilCore.pathToUrl(moduleFileDirectory(project, root)))
         val externalSource = ExternalProjectSystemRegistry.getInstance().getSourceById(NixFlakeConstants.SYSTEM_ID.id)
-        val entitySource = LegacyBridgeJpsEntitySourceFactory.getInstance(project).createEntitySourceForModule(rootUrl, externalSource)
+        val entitySource = LegacyBridgeJpsEntitySourceFactory.getInstance(project).createEntitySourceForModule(moduleFileDir, externalSource)
         val existingName = findModule(project, root)?.name
         // Note: Another module could take the name between this check and the update below. Unlikely enough for now.
         val moduleName = existingName ?: uniqueModuleName(project, preferredModuleName(project, root))
@@ -94,32 +109,13 @@ object NixFlakeWorkspaceModel {
         workspaceModel.update("Nix flake import: $root") { storage ->
             existingName?.let { storage.resolve(ModuleId(it)) }?.let(storage::removeEntity)
 
-            // TODO(decision): Another module (e.g. the project's own module, or a Gradle module) may already have the
-            //  flake directory as content root. The Workspace Model can store that, but the platform doesn't support it:
-            //  `ProjectFileIndex` maps every file to exactly one module, and Project Structure reports "Content root is
-            //  defined for multiple modules". Checking for an existing module first would depend on the import order.
-            //  Proposal: Don't give the module a content root at all. The module is then only a hook for "Build Project"
-            //  (`ModuleBuildTask` doesn't need content roots), and the runner already looks up the flake via the
-            //  module's external system options (see getFlakeRoot). Excludes would move to a
-            //  `DirectoryIndexExcludePolicy`, which works for any module.
-
-            storage.addEntity(ModuleEntity(moduleName, listOf(InheritedSdkDependency, ModuleSourceDependency), entitySource) {
-                // TODO(decision): Module type. A custom type is possible via the `moduleType` extension point (own icon and
-                //  name in Project Structure), but IDEA then expects a `ModuleBuilder` for the New Module wizard, and
-                //  projects show "unknown module type" when the plugin is disabled. Proposal: no custom type for now, but
-                //  set `GeneralModuleType.TYPE_ID` (`GENERAL_MODULE`), the platform's type for modules without
-                //  language-specific setup (needs a check that it is registered in all IDEs).
-                contentRoots = listOf(
-                    // `nix build` creates `result` (or `result-<output>`) symlinks into the store. Indexing them would
-                    // index store paths as project content. Builds started by this plugin don't create them,
-                    // see NixFlakeGcRoots. Patterns match file names anywhere below the content root.
-                    // TODO: Users can also choose other names (`--out-link`). Ideally exclude every symlink into
-                    //  `/nix/store`, or everything that is not tracked by git (nix ignores it anyway). Possible via
-                    //  a `DirectoryIndexExcludePolicy` which checks symlinks / asks the git integration.
-                    // TODO: Also exclude `.direnv`? Make excludes configurable?
-                    ContentRootEntity(rootUrl, listOf("result", "result-*"), entitySource),
-                )
-            })
+            // No content root, see the class documentation.
+            // TODO(decision): Module type. A custom type is possible via the `moduleType` extension point (own icon and
+            //  name in Project Structure), but IDEA then expects a `ModuleBuilder` for the New Module wizard, and
+            //  projects show "unknown module type" when the plugin is disabled. Proposal: no custom type for now, but
+            //  set `GeneralModuleType.TYPE_ID` (`GENERAL_MODULE`), the platform's type for modules without
+            //  language-specific setup (needs a check that it is registered in all IDEs).
+            storage.addEntity(ModuleEntity(moduleName, listOf(InheritedSdkDependency, ModuleSourceDependency), entitySource))
         }
 
         // Mark the module as imported. Without these options, the `.iml` file doesn't get the `external.system.id`
@@ -144,6 +140,20 @@ object NixFlakeWorkspaceModel {
             }
         }
         NixFlakeImportState.getInstance(project).remove(flakeRoot)
+    }
+
+    /**
+     * Directory for the `.iml` file, if external storage is disabled: `.idea/modules` for directory-based projects.
+     * `projectFilePath` is `.idea/misc.xml` there. For the old `.ipr` format, the `.iml` goes next to the flake.
+     */
+    private fun moduleFileDirectory(project: Project, flakeRoot: String): String {
+        val projectFile = project.projectFilePath?.let { Path.of(it) }
+        return if (projectFile != null && projectFile.parent?.fileName?.toString() == Project.DIRECTORY_STORE_FOLDER) {
+            projectFile.resolveSibling("modules").toString()
+        }
+        else {
+            flakeRoot
+        }
     }
 
     private fun uniqueModuleName(project: Project, preferred: String): String {

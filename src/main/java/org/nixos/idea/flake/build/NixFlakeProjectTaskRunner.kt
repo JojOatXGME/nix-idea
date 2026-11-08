@@ -30,8 +30,7 @@ class NixFlakeProjectTaskRunner : ProjectTaskRunner() {
 
     override fun run(project: Project, context: ProjectTaskContext, vararg tasks: ProjectTask): Promise<Result> {
         val promise = AsyncPromise<Result>()
-        // The flake is looked up via the module's external system options instead of its content root, so this keeps
-        // working if the module loses its content root (see the content root TODO in NixFlakeWorkspaceModel).
+        // The module has no content root, so the flake is looked up via the module's external system options.
         val roots = tasks.filterIsInstance<ModuleBuildTask>()
             .mapNotNull { NixFlakeWorkspaceModel.getFlakeRoot(it.module) }
             .distinct()

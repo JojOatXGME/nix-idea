@@ -26,7 +26,7 @@ import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import org.nixos.idea.flake.NixFlakeActivityKey
 import org.nixos.idea.flake.NixFlakeGcRoots
-import org.nixos.idea.flake.NixLinkedFlakesSettings
+import org.nixos.idea.flake.NixFlakeProjectSettings
 import org.nixos.idea.flake.model.NixFlakeImportState
 import org.nixos.idea.flake.model.NixFlakeInputsRootsProvider
 import org.nixos.idea.flake.model.NixFlakeWorkspaceModel
@@ -65,7 +65,7 @@ class NixFlakeSyncService(private val project: Project, private val cs: Coroutin
     }
 
     fun scheduleSyncAll(explicit: Boolean) {
-        for (root in NixLinkedFlakesSettings.getInstance(project).linkedFlakes) {
+        for (root in NixFlakeProjectSettings.getInstance(project).linkedFlakes) {
             scheduleSync(root, explicit)
         }
     }

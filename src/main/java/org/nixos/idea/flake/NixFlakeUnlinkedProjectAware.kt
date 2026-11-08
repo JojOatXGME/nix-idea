@@ -40,10 +40,10 @@ class NixFlakeUnlinkedProjectAware : ExternalSystemUnlinkedProjectAware {
         NixFlakeSettings.getInstance().autoImport && buildFile.name == NixFlakeConstants.FLAKE_FILE_NAME
 
     override fun isLinkedProject(project: Project, externalProjectPath: String): Boolean =
-        NixLinkedFlakesSettings.getInstance(project).isLinked(externalProjectPath)
+        NixFlakeProjectSettings.getInstance(project).isLinked(externalProjectPath)
 
     override fun subscribe(project: Project, listener: ExternalSystemProjectLinkListener, parentDisposable: Disposable) {
-        project.messageBus.connect(parentDisposable).subscribe(NixLinkedFlakesSettings.TOPIC, object : NixLinkedFlakesSettings.Listener {
+        project.messageBus.connect(parentDisposable).subscribe(NixFlakeProjectSettings.TOPIC, object : NixFlakeProjectSettings.Listener {
             override fun onFlakeLinked(flakeRoot: String) = listener.onProjectLinked(flakeRoot)
             override fun onFlakeUnlinked(flakeRoot: String) = listener.onProjectUnlinked(flakeRoot)
         })
@@ -56,12 +56,12 @@ class NixFlakeUnlinkedProjectAware : ExternalSystemUnlinkedProjectAware {
         if (!ExternalSystemTrustedProjectDialog.confirmLinkingUntrustedProjectAsync(project, systemId, Path.of(externalProjectPath))) {
             return
         }
-        NixLinkedFlakesSettings.getInstance(project).link(externalProjectPath)
+        NixFlakeProjectSettings.getInstance(project).link(externalProjectPath)
         NixFlakeSyncService.getInstance(project).sync(externalProjectPath, explicit = true)
     }
 
     override suspend fun unlinkProject(project: Project, externalProjectPath: String) {
-        NixLinkedFlakesSettings.getInstance(project).unlink(externalProjectPath)
+        NixFlakeProjectSettings.getInstance(project).unlink(externalProjectPath)
         NixFlakeWorkspaceModel.removeFlake(project, externalProjectPath)
         // Drop the GC roots, so `nix-collect-garbage` can delete the formatter and build results of the flake.
         withContext(Dispatchers.IO) {

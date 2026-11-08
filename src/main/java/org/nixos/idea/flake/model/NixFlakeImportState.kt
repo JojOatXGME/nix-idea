@@ -67,22 +67,36 @@ class NixFlakeImportState(private val project: Project) : SimplePersistentStateC
         var direct by property(false)
     }
 
-    val flakes: List<FlakeState>
-        get() = state.flakes.toList()
+    // Thread safety: different flakes are imported in parallel (see NixFlakeSyncService), and the tool window reads the
+    // state from the EDT. A write action is not needed and wouldn't help: it guards the platform's models (PSI, VFS,
+    // Workspace Model), not the state of a plugin's own service. But `update` and `remove` are read-modify-write
+    // operations on the list, so two parallel imports could lose one of the updates without the lock.
+    // The list itself is never mutated, only replaced, so the serializer always sees a consistent list on save.
+    private val lock = Any()
 
-    fun getFlake(root: String): FlakeState? = state.flakes.find { it.root == root }
+    val flakes: List<FlakeState>
+        get() = synchronized(lock) { state.flakes.toList() }
+
+    fun getFlake(root: String): FlakeState? = synchronized(lock) { state.flakes.find { it.root == root } }
 
     fun update(flake: FlakeState) {
-        // Assign a new list instead of mutating the old one, so that BaseState notices the modification.
-        state.flakes = (state.flakes.filter { it.root != flake.root } + flake).toMutableList()
+        synchronized(lock) {
+            // Assign a new list instead of mutating the old one, so that BaseState notices the modification.
+            state.flakes = (state.flakes.filter { it.root != flake.root } + flake).toMutableList()
+        }
         project.messageBus.syncPublisher(TOPIC).stateChanged()
     }
 
     fun remove(root: String) {
-        if (getFlake(root) != null) {
-            state.flakes = state.flakes.filter { it.root != root }.toMutableList()
-            project.messageBus.syncPublisher(TOPIC).stateChanged()
+        val removed = synchronized(lock) {
+            val remaining = state.flakes.filter { it.root != root }
+            if (remaining.size != state.flakes.size) {
+                state.flakes = remaining.toMutableList()
+                true
+            }
+            else false
         }
+        if (removed) project.messageBus.syncPublisher(TOPIC).stateChanged()
     }
 
     fun interface Listener {
