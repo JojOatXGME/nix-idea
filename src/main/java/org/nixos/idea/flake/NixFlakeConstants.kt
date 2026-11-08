@@ -1,6 +1,15 @@
 package org.nixos.idea.flake
 
+import com.intellij.openapi.externalSystem.autoimport.ExternalSystemProjectTracker
+import com.intellij.openapi.externalSystem.autolink.ExternalSystemUnlinkedProjectAware
 import com.intellij.openapi.externalSystem.model.ProjectSystemId
+import com.intellij.platform.workspace.jps.JpsImportedEntitySource
+import org.nixos.idea.flake.build.NixFlakeProjectTaskRunner
+import org.nixos.idea.flake.model.NixFlakeInputsRootsProvider
+import org.nixos.idea.flake.model.NixFlakeWorkspaceModel
+import org.nixos.idea.flake.sync.NixFlakeProjectAware
+import org.nixos.idea.flake.sync.NixFlakeSyncService
+import org.nixos.idea.flake.ui.NixFlakeToolWindowFactory
 
 /**
  * Constants shared by the Nix Flake integration.
@@ -10,12 +19,12 @@ import com.intellij.openapi.externalSystem.model.ProjectSystemId
  * an own sync service which plugs into standalone platform hooks:
  *
  *  - [NixFlakeUnlinkedProjectAware]: detects `flake.nix`, offers or auto-runs the import
- *  - [org.nixos.idea.flake.sync.NixFlakeProjectAware]: re-import on changes, floating "Load changes" button
- *  - [org.nixos.idea.flake.sync.NixFlakeSyncService]: runs the import, reports to the Sync tab of the Build tool window
- *  - [org.nixos.idea.flake.model.NixFlakeWorkspaceModel]: writes modules into the Workspace Model
- *  - [org.nixos.idea.flake.model.NixFlakeInputsRootsProvider]: makes flake inputs browsable as libraries
- *  - [org.nixos.idea.flake.ui.NixFlakeToolWindowFactory]: tool window on the right
- *  - [org.nixos.idea.flake.build.NixFlakeProjectTaskRunner]: "Build Project" runs `nix build`
+ *  - [NixFlakeProjectAware]: re-import on changes, floating "Load changes" button
+ *  - [NixFlakeSyncService]: runs the import, reports to the Sync tab of the Build tool window
+ *  - [NixFlakeWorkspaceModel]: writes modules into the Workspace Model
+ *  - [NixFlakeInputsRootsProvider]: makes flake inputs browsable as libraries
+ *  - [NixFlakeToolWindowFactory]: tool window on the right
+ *  - [NixFlakeProjectTaskRunner]: "Build Project" runs `nix build`
  *
  * The [SYSTEM_ID] is only used as an identifier for these APIs.
  */
@@ -23,7 +32,7 @@ object NixFlakeConstants {
 
     /**
      * Identifier used for [ExternalSystemUnlinkedProjectAware], [ExternalSystemProjectTracker] and as
-     * `externalSystemId` of the [com.intellij.platform.workspace.jps.JpsImportedEntitySource] of imported modules.
+     * `externalSystemId` of the [JpsImportedEntitySource] of imported modules.
      *
      * TODO(decision): The id ends up in `.iml` files (`external.system.id`) and in the auto-import settings.
      *  Changing it later would orphan modules of existing users. Decide on the final id before the first release.
