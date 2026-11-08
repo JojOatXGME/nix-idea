@@ -11,7 +11,7 @@ import com.intellij.workspaceModel.core.fileIndex.WorkspaceFileSetRegistrar
  * Excludes symlinks into the Nix store from the content of every module, not only from flakes linked by the import.
  *
  * `nix build` creates `result` (or `result-<output>`, or any name passed to `--out-link`), and direnv's `use flake`
- * creates `.direnv/flake-profile-*` and `.direnv/flake-inputs/*`. Without this, the IDE would index store paths
+ * creates `.direnv/flake-profile-*` and `.direnv/flake-inputs/<name>`. Without this, the IDE would index store paths
  * as project content. Builds started by this plugin don't create such links, see [org.nixos.idea.flake.NixFlakeGcRoots].
  *
  * The import doesn't give its modules a content root (see [NixFlakeWorkspaceModel]), so the exclusion is registered for
