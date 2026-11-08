@@ -38,7 +38,7 @@ java {
 kotlin {
     compilerOptions {
         jvmTarget.set(JvmTarget.JVM_21)
-        // Don't generate DefaultImpls bridges for default methods of Kotlin interfaces.
+        // Disable compatibility with Kotlin 2.1 and earlier, or builds using `-jvm-default=disable`.
         // Otherwise, classes implementing platform interfaces (e.g. ToolWindowFactory) override and call
         // @ApiStatus.Internal default methods, which the Plugin Verifier reports as INTERNAL_API_USAGES.
         jvmDefault.set(JvmDefaultMode.NO_COMPATIBILITY)
