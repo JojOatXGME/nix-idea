@@ -42,7 +42,7 @@ internal class NixFlakeToolWindowPanel(private val project: Project) : SimpleToo
         })
         setContent(ScrollPaneFactory.createScrollPane(tree))
 
-        val group = ActionManager.getInstance().getAction("NixFlake.ToolWindow.Toolbar") as ActionGroup
+        val group = ActionManager.getInstance().getAction("nix-idea.flake.toolWindowToolbar") as ActionGroup
         val toolbar = ActionManager.getInstance().createActionToolbar(ActionPlaces.TOOLWINDOW_TOOLBAR_BAR, group, true)
         toolbar.targetComponent = this
         setToolbar(toolbar.component)
@@ -123,6 +123,6 @@ internal class NixFlakeToolWindowPanel(private val project: Project) : SimpleToo
     companion object {
         /** Root directory of the flake selected in the tool window, if any. */
         @JvmField
-        val SELECTED_FLAKE_ROOT: DataKey<String> = DataKey.create("NixFlake.SelectedFlakeRoot")
+        val SELECTED_FLAKE_ROOT: DataKey<String> = DataKey.create("nix-idea.flake.selectedFlakeRoot")
     }
 }

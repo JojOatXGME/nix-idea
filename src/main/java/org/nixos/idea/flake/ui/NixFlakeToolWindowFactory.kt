@@ -5,7 +5,7 @@ import com.intellij.openapi.project.Project
 import com.intellij.openapi.wm.ToolWindow
 import com.intellij.openapi.wm.ToolWindowFactory
 import com.intellij.ui.content.ContentFactory
-import org.nixos.idea.flake.NixFlakeSettings
+import org.nixos.idea.flake.NixLinkedFlakesSettings
 
 /**
  * Tool window on the right side showing the linked flakes, their inputs, and the formatter.
@@ -22,7 +22,7 @@ class NixFlakeToolWindowFactory : ToolWindowFactory, DumbAware {
 
     override fun shouldBeAvailable(project: Project): Boolean =
         // TODO(decision): Also show for projects with an unlinked flake.nix, to offer "Link flake" from the tool window?
-        NixFlakeSettings.getInstance(project).linkedFlakes.isNotEmpty()
+        NixLinkedFlakesSettings.getInstance(project).linkedFlakes.isNotEmpty()
 
     override fun createToolWindowContent(project: Project, toolWindow: ToolWindow) {
         val panel = NixFlakeToolWindowPanel(project)

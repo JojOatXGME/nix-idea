@@ -6,11 +6,11 @@ import com.intellij.openapi.components.service
 import com.intellij.openapi.externalSystem.autoimport.ExternalSystemProjectTracker
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.util.Disposer
-import org.nixos.idea.flake.NixFlakeSettings
+import org.nixos.idea.flake.NixLinkedFlakesSettings
 import java.util.concurrent.ConcurrentHashMap
 
 /**
- * Registers every linked flake with the auto-import tracker, and keeps the registrations in sync with [NixFlakeSettings].
+ * Registers every linked flake with the auto-import tracker, and keeps the registrations in sync with [NixLinkedFlakesSettings].
  *
  * Reference: `MavenProjectManagerWatcher.start()` (`projectTracker.register(...)` + `projectTracker.activate(...)`).
  */
@@ -20,9 +20,9 @@ internal class NixFlakeTrackerRegistrations(private val project: Project) : Disp
     private val registrations = ConcurrentHashMap<String, Disposable>()
 
     fun start() {
-        val settings = NixFlakeSettings.getInstance(project)
+        val settings = NixLinkedFlakesSettings.getInstance(project)
         settings.linkedFlakes.forEach(::register)
-        project.messageBus.connect(this).subscribe(NixFlakeSettings.TOPIC, object : NixFlakeSettings.Listener {
+        project.messageBus.connect(this).subscribe(NixLinkedFlakesSettings.TOPIC, object : NixLinkedFlakesSettings.Listener {
             override fun onFlakeLinked(flakeRoot: String) = register(flakeRoot)
             override fun onFlakeUnlinked(flakeRoot: String) {
                 registrations.remove(flakeRoot)?.let(Disposer::dispose)

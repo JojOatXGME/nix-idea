@@ -15,10 +15,12 @@ import org.nixos.idea.settings.NixStoragePaths
  *
  * This is the equivalent of `GradleSettings` (`.idea/gradle.xml`).
  * The *result* of an import is not stored here, see [org.nixos.idea.flake.model.NixFlakeImportState].
+ * Whether flakes are detected and imported automatically is an application-level setting,
+ * see [org.nixos.idea.settings.NixFlakeSettings].
  */
 @Service(Service.Level.PROJECT)
-@State(name = "NixFlakeSettings", storages = [Storage(NixStoragePaths.DEFAULT)])
-class NixFlakeSettings(private val project: Project) : SimplePersistentStateComponent<NixFlakeSettings.State>(State()) {
+@State(name = "NixLinkedFlakes", storages = [Storage(NixStoragePaths.DEFAULT)])
+class NixLinkedFlakesSettings(private val project: Project) : SimplePersistentStateComponent<NixLinkedFlakesSettings.State>(State()) {
 
     class State : BaseState() {
         /** System-independent paths of directories containing a linked `flake.nix`. */
@@ -61,6 +63,6 @@ class NixFlakeSettings(private val project: Project) : SimplePersistentStateComp
         val TOPIC: Topic<Listener> = Topic(Listener::class.java, Topic.BroadcastDirection.NONE)
 
         @JvmStatic
-        fun getInstance(project: Project): NixFlakeSettings = project.service()
+        fun getInstance(project: Project): NixLinkedFlakesSettings = project.service()
     }
 }

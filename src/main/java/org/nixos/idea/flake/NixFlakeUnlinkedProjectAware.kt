@@ -12,6 +12,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import org.nixos.idea.flake.model.NixFlakeWorkspaceModel
 import org.nixos.idea.flake.sync.NixFlakeSyncService
+import org.nixos.idea.settings.NixFlakeSettings
 import java.nio.file.Path
 
 /**
@@ -28,14 +29,21 @@ class NixFlakeUnlinkedProjectAware : ExternalSystemUnlinkedProjectAware {
 
     override val systemId: ProjectSystemId = NixFlakeConstants.SYSTEM_ID
 
+    /**
+     * Without [NixFlakeSettings.autoImport], no `flake.nix` is reported as build file, so the platform neither shows the
+     * notification nor links the flake automatically. Flakes can still be linked explicitly with [org.nixos.idea.flake.ui.NixFlakeLinkAction].
+     *
+     * TODO: The platform scans for build files on project open and when files change. Enabling the setting probably
+     *  has no effect on open projects until they are reopened or `flake.nix` changes. Needs a way to trigger a rescan.
+     */
     override fun isBuildFile(project: Project, buildFile: VirtualFile): Boolean =
-        buildFile.name == NixFlakeConstants.FLAKE_FILE_NAME
+        NixFlakeSettings.getInstance().autoImport && buildFile.name == NixFlakeConstants.FLAKE_FILE_NAME
 
     override fun isLinkedProject(project: Project, externalProjectPath: String): Boolean =
-        NixFlakeSettings.getInstance(project).isLinked(externalProjectPath)
+        NixLinkedFlakesSettings.getInstance(project).isLinked(externalProjectPath)
 
     override fun subscribe(project: Project, listener: ExternalSystemProjectLinkListener, parentDisposable: Disposable) {
-        project.messageBus.connect(parentDisposable).subscribe(NixFlakeSettings.TOPIC, object : NixFlakeSettings.Listener {
+        project.messageBus.connect(parentDisposable).subscribe(NixLinkedFlakesSettings.TOPIC, object : NixLinkedFlakesSettings.Listener {
             override fun onFlakeLinked(flakeRoot: String) = listener.onProjectLinked(flakeRoot)
             override fun onFlakeUnlinked(flakeRoot: String) = listener.onProjectUnlinked(flakeRoot)
         })
@@ -48,12 +56,12 @@ class NixFlakeUnlinkedProjectAware : ExternalSystemUnlinkedProjectAware {
         if (!ExternalSystemTrustedProjectDialog.confirmLinkingUntrustedProjectAsync(project, systemId, Path.of(externalProjectPath))) {
             return
         }
-        NixFlakeSettings.getInstance(project).link(externalProjectPath)
+        NixLinkedFlakesSettings.getInstance(project).link(externalProjectPath)
         NixFlakeSyncService.getInstance(project).sync(externalProjectPath, explicit = true)
     }
 
     override suspend fun unlinkProject(project: Project, externalProjectPath: String) {
-        NixFlakeSettings.getInstance(project).unlink(externalProjectPath)
+        NixLinkedFlakesSettings.getInstance(project).unlink(externalProjectPath)
         NixFlakeWorkspaceModel.removeFlake(project, externalProjectPath)
         // Drop the GC roots, so `nix-collect-garbage` can delete the formatter and build results of the flake.
         withContext(Dispatchers.IO) {

@@ -13,4 +13,8 @@ public class NixIcons {
 
     private static final Icon SNOWFLAKE = IconLoader.getIcon("/icons/nixSnowflake.svg", NixIcons.class);
     public static final Icon FILE = SNOWFLAKE;
+
+    // Monochrome variants following the icon palettes of the classic UI and the new UI (see NixIconMappings.json).
+    public static final Icon TOOL_WINDOW = IconLoader.getIcon("/icons/nixFlakeToolWindow.svg", NixIcons.class);
+    public static final Icon LOAD_CHANGES = IconLoader.getIcon("/icons/nixFlakeLoadChanges.svg", NixIcons.class);
 }

@@ -19,10 +19,18 @@
                 id="nixFlake"
                 implementation="org.nixos.idea.flake.build.NixFlakeProjectTaskRunner"/>
 
+        <!-- Icon of the floating "Load changes" button. -->
+        <externalIconProvider
+                key="NIX_FLAKE"
+                implementationClass="org.nixos.idea.flake.NixFlakeIconProvider"/>
+
+        <!-- New UI variants of the icons in /icons, see /icons/expui. -->
+        <iconMapper mappingFile="NixIconMappings.json"/>
+
         <toolWindow
                 id="Nix Flake"
                 anchor="right"
-                icon="/icons/nixSnowflake.svg"
+                icon="org.nixos.idea.icon.NixIcons.TOOL_WINDOW"
                 factoryClass="org.nixos.idea.flake.ui.NixFlakeToolWindowFactory"/>
     </extensions>
 
@@ -32,26 +40,28 @@
                   topic="com.intellij.ide.trustedProjects.TrustedProjectsListener"/>
     </applicationListeners>
 
+    <!-- Action IDs are prefixed with the plugin ID (`nix-idea`), as recommended by the IntelliJ Platform SDK docs.
+         plugin.xml has no placeholders, and the IDs are also referenced from code, so the prefix is spelled out. -->
     <actions>
-        <action id="NixFlake.Reload"
+        <action id="nix-idea.flake.reload"
                 class="org.nixos.idea.flake.ui.NixFlakeReloadAction"
                 text="Reload All Nix Flakes"
                 description="Re-imports all linked Nix flakes"
                 icon="AllIcons.Actions.Refresh"/>
-        <action id="NixFlake.Link"
+        <action id="nix-idea.flake.link"
                 class="org.nixos.idea.flake.ui.NixFlakeLinkAction"
                 text="Link Nix Flake…"
                 description="Imports a flake.nix into the project"
                 icon="AllIcons.General.Add"/>
-        <action id="NixFlake.Unlink"
+        <action id="nix-idea.flake.unlink"
                 class="org.nixos.idea.flake.ui.NixFlakeUnlinkAction"
                 text="Unlink Nix Flake…"
                 description="Removes selected Nix flakes from the project"
                 icon="AllIcons.General.Remove"/>
-        <group id="NixFlake.ToolWindow.Toolbar">
-            <reference ref="NixFlake.Reload"/>
-            <reference ref="NixFlake.Link"/>
-            <reference ref="NixFlake.Unlink"/>
+        <group id="nix-idea.flake.toolWindowToolbar">
+            <reference ref="nix-idea.flake.reload"/>
+            <reference ref="nix-idea.flake.link"/>
+            <reference ref="nix-idea.flake.unlink"/>
         </group>
     </actions>
 </idea-plugin>

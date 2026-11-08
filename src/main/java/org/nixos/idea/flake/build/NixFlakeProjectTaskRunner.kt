@@ -1,15 +1,12 @@
 package org.nixos.idea.flake.build
 
 import com.intellij.openapi.project.Project
-import com.intellij.platform.backend.workspace.workspaceModel
-import com.intellij.platform.workspace.jps.entities.ModuleId
 import com.intellij.task.ModuleBuildTask
 import com.intellij.task.ProjectTask
 import com.intellij.task.ProjectTaskContext
 import com.intellij.task.ProjectTaskRunner
 import org.jetbrains.concurrency.AsyncPromise
 import org.jetbrains.concurrency.Promise
-import org.nixos.idea.flake.NixFlakeSettings
 import org.nixos.idea.flake.model.NixFlakeWorkspaceModel
 
 /**
@@ -28,18 +25,16 @@ class NixFlakeProjectTaskRunner : ProjectTaskRunner() {
     override fun canRun(projectTask: ProjectTask): Boolean = false
 
     override fun canRun(project: Project, projectTask: ProjectTask, context: ProjectTaskContext?): Boolean {
-        if (projectTask !is ModuleBuildTask) return false
-        val entity = project.workspaceModel.currentSnapshot.resolve(ModuleId(projectTask.module.name)) ?: return false
-        return NixFlakeWorkspaceModel.isNixFlakeModule(entity)
+        return projectTask is ModuleBuildTask && NixFlakeWorkspaceModel.getFlakeRoot(projectTask.module) != null
     }
 
     override fun run(project: Project, context: ProjectTaskContext, vararg tasks: ProjectTask): Promise<Result> {
         val promise = AsyncPromise<Result>()
-        // Look up the flake by module name instead of the module's content root, so this keeps working if the
-        // module loses its content root (see the content root TODO in NixFlakeWorkspaceModel).
-        val moduleNames = tasks.filterIsInstance<ModuleBuildTask>().map { it.module.name }.toSet()
-        val roots = NixFlakeSettings.getInstance(project).linkedFlakes
-            .filter { NixFlakeWorkspaceModel.moduleName(project, it) in moduleNames }
+        // The flake is looked up via the module's external system options instead of its content root, so this keeps
+        // working if the module loses its content root (see the content root TODO in NixFlakeWorkspaceModel).
+        val roots = tasks.filterIsInstance<ModuleBuildTask>()
+            .mapNotNull { NixFlakeWorkspaceModel.getFlakeRoot(it.module) }
+            .distinct()
         NixFlakeBuildService.getInstance(project).build(roots, promise)
         return promise
     }

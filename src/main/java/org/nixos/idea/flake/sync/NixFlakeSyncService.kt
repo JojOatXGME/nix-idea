@@ -26,7 +26,7 @@ import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import org.nixos.idea.flake.NixFlakeActivityKey
 import org.nixos.idea.flake.NixFlakeGcRoots
-import org.nixos.idea.flake.NixFlakeSettings
+import org.nixos.idea.flake.NixLinkedFlakesSettings
 import org.nixos.idea.flake.model.NixFlakeImportState
 import org.nixos.idea.flake.model.NixFlakeInputsRootsProvider
 import org.nixos.idea.flake.model.NixFlakeWorkspaceModel
@@ -65,7 +65,7 @@ class NixFlakeSyncService(private val project: Project, private val cs: Coroutin
     }
 
     fun scheduleSyncAll(explicit: Boolean) {
-        for (root in NixFlakeSettings.getInstance(project).linkedFlakes) {
+        for (root in NixLinkedFlakesSettings.getInstance(project).linkedFlakes) {
             scheduleSync(root, explicit)
         }
     }
@@ -95,7 +95,7 @@ class NixFlakeSyncService(private val project: Project, private val cs: Coroutin
         var success = false
 
         val buildDescriptor = DefaultBuildDescriptor(Any(), "Nix flake ${Path.of(flakeRoot).fileName}", flakeRoot, System.currentTimeMillis())
-            .withRestartAction(ActionManager.getInstance().getAction("NixFlake.Reload"))
+            .withRestartAction(ActionManager.getInstance().getAction("nix-idea.flake.reload"))
         // Same behavior as the Gradle and Maven integrations (see `ProjectAware.reloadProject` and
         // `ExternalSystemUtil` in intellij-community): The tool window is never activated when a sync starts; the
         // progress bar in the status bar is the main indicator. When an explicit sync fails, the Build tool window is

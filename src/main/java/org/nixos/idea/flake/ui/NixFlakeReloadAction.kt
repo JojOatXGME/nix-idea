@@ -3,7 +3,7 @@ package org.nixos.idea.flake.ui
 import com.intellij.openapi.actionSystem.ActionUpdateThread
 import com.intellij.openapi.actionSystem.AnActionEvent
 import com.intellij.openapi.project.DumbAwareAction
-import org.nixos.idea.flake.NixFlakeSettings
+import org.nixos.idea.flake.NixLinkedFlakesSettings
 import org.nixos.idea.flake.sync.NixFlakeSyncService
 
 /**
@@ -17,7 +17,7 @@ class NixFlakeReloadAction : DumbAwareAction() {
 
     override fun update(e: AnActionEvent) {
         val project = e.project
-        e.presentation.isEnabledAndVisible = project != null && NixFlakeSettings.getInstance(project).linkedFlakes.isNotEmpty()
+        e.presentation.isEnabledAndVisible = project != null && NixLinkedFlakesSettings.getInstance(project).linkedFlakes.isNotEmpty()
     }
 
     override fun actionPerformed(e: AnActionEvent) {

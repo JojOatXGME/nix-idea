@@ -8,13 +8,15 @@ import com.intellij.openapi.externalSystem.autoimport.ExternalSystemProjectReloa
 import com.intellij.openapi.externalSystem.autoimport.ExternalSystemRefreshStatus
 import com.intellij.openapi.project.Project
 import org.nixos.idea.flake.NixFlakeConstants
+import org.nixos.idea.settings.NixFlakeSettings
 
 /**
  * Connects one linked flake to the platform's auto-import tracker (`ExternalSystemProjectTracker`).
  *
  * The tracker then
  *  - watches [settingsFiles] and shows the floating "Load Nix Flake Changes" button in the editor,
- *  - honors the user's auto-reload setting (Settings | Build Tools: "Reload project after changes in the build scripts"),
+ *  - only reloads automatically if [NixFlakeSettings.autoImport] is enabled, and then
+ *    honors the user's auto-reload setting (Settings | Build Tools: "Reload project after changes in the build scripts"),
  *  - requests a reload when the Workspace Model cache was lost (see `AutoImportProjectTracker.isWorkspaceModelCacheAbsentOrInvalid`).
  *
  * Maven uses this API the same way without implementing `ExternalSystemManager`, see `MavenProjectAware`.
@@ -52,7 +54,11 @@ class NixFlakeProjectAware(
     }
 
     override fun reloadProject(context: ExternalSystemProjectReloadContext) {
-        // Must not block. `context.isExplicitReload` is true when the user clicked the floating button.
+        // `context.isExplicitReload` is true when the user clicked the floating button.
+        // Without auto-import, flakes are only evaluated on explicit request. Skipping the reload keeps the project
+        // dirty for the tracker (the status only changes on `onProjectReloadStart`), so the floating button stays visible.
+        if (!context.isExplicitReload && !NixFlakeSettings.getInstance().autoImport) return
+        // Must not block.
         NixFlakeSyncService.getInstance(project).scheduleSync(flakeRoot, context.isExplicitReload)
     }
 }

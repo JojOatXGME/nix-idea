@@ -1,6 +1,7 @@
 package org.nixos.idea.flake.model
 
 import com.intellij.navigation.ItemPresentation
+import com.intellij.openapi.application.edtWriteAction
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.roots.AdditionalLibraryRootsListener
 import com.intellij.openapi.roots.AdditionalLibraryRootsProvider
@@ -70,11 +71,17 @@ class NixFlakeInputsRootsProvider : AdditionalLibraryRootsProvider() {
     }
 
     companion object {
-        /** Must be called after [NixFlakeImportState] changed the inputs of a flake. */
-        fun notifyInputsChanged(project: Project, oldRoots: Collection<VirtualFile>, newRoots: Collection<VirtualFile>) {
-            AdditionalLibraryRootsListener.fireAdditionalLibraryChanged(
-                project, "Nix flake inputs", oldRoots, newRoots, "NixFlakeInputs",
-            )
+        /**
+         * Must be called after [NixFlakeImportState] changed the inputs of a flake.
+         * The listener requires a write action. Resolve the roots before calling this method, outside the write action,
+         * as `refreshAndFindFileByPath` must not run inside a write action.
+         */
+        suspend fun notifyInputsChanged(project: Project, oldRoots: Collection<VirtualFile>, newRoots: Collection<VirtualFile>) {
+            edtWriteAction {
+                AdditionalLibraryRootsListener.fireAdditionalLibraryChanged(
+                    project, "Nix flake inputs", oldRoots, newRoots, "NixFlakeInputs",
+                )
+            }
         }
     }
 }

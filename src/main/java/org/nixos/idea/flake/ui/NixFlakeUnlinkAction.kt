@@ -6,7 +6,7 @@ import com.intellij.openapi.externalSystem.autolink.ExternalSystemUnlinkedProjec
 import com.intellij.openapi.project.DumbAwareAction
 import com.intellij.platform.ide.progress.runWithModalProgressBlocking
 import org.nixos.idea.flake.NixFlakeConstants
-import org.nixos.idea.flake.NixFlakeSettings
+import org.nixos.idea.flake.NixLinkedFlakesSettings
 
 /**
  * "Unlink Nix Flake…": asks which flakes to unlink, with the flake selected in the tool window preselected.
@@ -19,12 +19,12 @@ class NixFlakeUnlinkAction : DumbAwareAction() {
 
     override fun update(e: AnActionEvent) {
         val project = e.project
-        e.presentation.isEnabledAndVisible = project != null && NixFlakeSettings.getInstance(project).linkedFlakes.isNotEmpty()
+        e.presentation.isEnabledAndVisible = project != null && NixLinkedFlakesSettings.getInstance(project).linkedFlakes.isNotEmpty()
     }
 
     override fun actionPerformed(e: AnActionEvent) {
         val project = e.project ?: return
-        val linked = NixFlakeSettings.getInstance(project).linkedFlakes
+        val linked = NixLinkedFlakesSettings.getInstance(project).linkedFlakes
         val selected = e.getData(NixFlakeToolWindowPanel.SELECTED_FLAKE_ROOT)
         val dialog = NixFlakeUnlinkDialog(project, linked, preselected = setOfNotNull(selected))
         if (!dialog.showAndGet()) return
