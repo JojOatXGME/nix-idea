@@ -19,7 +19,7 @@ import org.nixos.idea.settings.NixStoragePaths
  * see [org.nixos.idea.settings.NixFlakeSettings].
  */
 @Service(Service.Level.PROJECT)
-@State(name = "NixLinkedFlakes", storages = [Storage(NixStoragePaths.DEFAULT)])
+@State(name = "NixFlakeProjectSettings", storages = [Storage(NixStoragePaths.DEFAULT)])
 class NixFlakeProjectSettings(private val project: Project) : SimplePersistentStateComponent<NixFlakeProjectSettings.State>(State()) {
 
     class State : BaseState() {

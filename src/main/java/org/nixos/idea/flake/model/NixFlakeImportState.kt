@@ -68,10 +68,12 @@ class NixFlakeImportState(private val project: Project) : SimplePersistentStateC
     }
 
     // Thread safety: different flakes are imported in parallel (see NixFlakeSyncService), and the tool window reads the
-    // state from the EDT. A write action is not needed and wouldn't help: it guards the platform's models (PSI, VFS,
-    // Workspace Model), not the state of a plugin's own service. But `update` and `remove` are read-modify-write
-    // operations on the list, so two parallel imports could lose one of the updates without the lock.
-    // The list itself is never mutated, only replaced, so the serializer always sees a consistent list on save.
+    // state from the EDT. Readers get snapshots: the list is never mutated, only replaced, and a `FlakeState` is never
+    // modified after it was passed to `update`. So a reader which calls `getFlake` once sees one consistent import
+    // result, and the serializer always sees a consistent list on save. The lock only serializes `update` and `remove`,
+    // which are read-modify-write operations on the list.
+    // A write action is not used: it is a global lock for the platform's models (PSI, VFS, Workspace Model), it would
+    // only help readers which hold a read action, and it blocks or cancels all of them (highlighting, indexing).
     private val lock = Any()
 
     val flakes: List<FlakeState>
@@ -79,6 +81,7 @@ class NixFlakeImportState(private val project: Project) : SimplePersistentStateC
 
     fun getFlake(root: String): FlakeState? = synchronized(lock) { state.flakes.find { it.root == root } }
 
+    /** Replaces the state of `flake.root`. The caller must not modify [flake] afterwards. */
     fun update(flake: FlakeState) {
         synchronized(lock) {
             // Assign a new list instead of mutating the old one, so that BaseState notices the modification.
