@@ -4,6 +4,7 @@ import org.jetbrains.intellij.platform.gradle.IntelliJPlatformType
 import org.jetbrains.intellij.platform.gradle.TestFrameworkType
 import org.jetbrains.kotlin.gradle.dsl.JvmDefaultMode
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
+import org.jetbrains.kotlin.gradle.dsl.KotlinVersion
 
 plugins {
     id("java")
@@ -42,6 +43,11 @@ kotlin {
         // Otherwise, classes implementing platform interfaces (e.g. ToolWindowFactory) override and call
         // @ApiStatus.Internal default methods, which the Plugin Verifier reports as INTERNAL_API_USAGES.
         jvmDefault.set(JvmDefaultMode.NO_COMPATIBILITY)
+        // The plugin uses the Kotlin standard library bundled with the IDE (`kotlin.stdlib.default.dependency = false`),
+        // so it must not depend on a newer standard library than the oldest supported IDE bundles (2025.2: Kotlin 2.2).
+        // Without this, the compiler writes coroutine debug metadata in a newer format, and the bundled standard
+        // library fails with "Debug metadata version mismatch" whenever it computes the stack trace of a coroutine.
+        apiVersion.set(KotlinVersion.KOTLIN_2_2)
     }
 }
 
@@ -245,9 +251,6 @@ tasks {
         testLogging {
             events("failed")
             exceptionFormat = org.gradle.api.tasks.testing.logging.TestExceptionFormat.FULL
-            // TODO(debug): Temporary, to find a test which hangs in CI.
-            events("started", "passed", "failed", "skipped")
-            showStandardStreams = true
         }
 
         systemProperty("idea.test.execution.policy", "org.nixos.idea.NixTestExecutionPolicy")
