@@ -245,6 +245,9 @@ tasks {
         testLogging {
             events("failed")
             exceptionFormat = org.gradle.api.tasks.testing.logging.TestExceptionFormat.FULL
+            // TODO(debug): Temporary, to find a test which hangs in CI.
+            events("started", "passed", "failed", "skipped")
+            showStandardStreams = true
         }
 
         systemProperty("idea.test.execution.policy", "org.nixos.idea.NixTestExecutionPolicy")

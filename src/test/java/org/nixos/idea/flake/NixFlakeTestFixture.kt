@@ -45,6 +45,10 @@ import kotlin.time.Duration.Companion.seconds
  */
 internal class NixFlakeTestFixture(val project: Project, private val disposable: Disposable) {
 
+    init {
+        stopWatchdogs()
+    }
+
     val nix = FakeNixCommand().also { it.install(disposable) }
 
     private val storeDir: Path = Files.createTempDirectory("nix-idea-fake-store").also { dir ->
@@ -53,6 +57,39 @@ internal class NixFlakeTestFixture(val project: Project, private val disposable:
 
     init {
         TrustedProjects.setProjectTrusted(project, true)
+        startWatchdog()
+    }
+
+    /**
+     * TODO(debug): Prints a thread dump to stderr if the test (including tear-down) takes more than two minutes.
+     *  Temporary, to find a test which hangs in CI. Remove once the cause is known.
+     */
+    private fun startWatchdog() {
+        val thread = Thread({
+            try {
+                while (true) {
+                    Thread.sleep(120_000)
+                    System.err.println("=== nix-idea watchdog: test still running ===\n" + ThreadDumper.dumpThreadsToString())
+                }
+            }
+            catch (_: InterruptedException) {
+            }
+        }, "nix-idea test watchdog")
+        thread.isDaemon = true
+        thread.start()
+        // Not via Disposer: the watchdog must also report hangs during the disposal of the project.
+        Runtime.getRuntime().addShutdownHook(Thread { thread.interrupt() })
+        watchdogs.add(thread)
+    }
+
+    companion object {
+        private val watchdogs = CopyOnWriteArrayList<Thread>()
+
+        /** Stops the watchdogs of earlier tests. Called when the next test starts. */
+        fun stopWatchdogs() {
+            watchdogs.forEach { it.interrupt() }
+            watchdogs.clear()
+        }
     }
 
     /** Creates a directory below the project directory (empty path for the project directory itself) and returns its path. */
