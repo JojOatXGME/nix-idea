@@ -2,7 +2,9 @@ import org.jetbrains.changelog.Changelog
 import org.jetbrains.changelog.markdownToHTML
 import org.jetbrains.intellij.platform.gradle.IntelliJPlatformType
 import org.jetbrains.intellij.platform.gradle.TestFrameworkType
+import org.jetbrains.kotlin.gradle.dsl.JvmDefaultMode
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
+import org.jetbrains.kotlin.gradle.dsl.KotlinVersion
 
 plugins {
     id("java")
@@ -37,6 +39,15 @@ java {
 kotlin {
     compilerOptions {
         jvmTarget.set(JvmTarget.JVM_21)
+        // Disable compatibility with Kotlin 2.1 and earlier, or builds using `-jvm-default=disable`.
+        // Otherwise, classes implementing platform interfaces (e.g. ToolWindowFactory) override and call
+        // @ApiStatus.Internal default methods, which the Plugin Verifier reports as INTERNAL_API_USAGES.
+        jvmDefault.set(JvmDefaultMode.NO_COMPATIBILITY)
+        // The plugin uses the Kotlin standard library bundled with the IDE (`kotlin.stdlib.default.dependency = false`),
+        // so it must not depend on a newer standard library than the oldest supported IDE bundles (2025.2: Kotlin 2.2).
+        // Without this, the compiler writes coroutine debug metadata in a newer format, and the bundled standard
+        // library fails with "Debug metadata version mismatch" whenever it computes the stack trace of a coroutine.
+        apiVersion.set(KotlinVersion.KOTLIN_2_2)
     }
 }
 
@@ -233,6 +244,13 @@ tasks {
 
         useJUnitPlatform {
             excludeTags("mock")
+        }
+
+        // Print the message and stack trace of failing tests to the console, so failures in CI can be analyzed
+        // without downloading the test reports.
+        testLogging {
+            events("failed")
+            exceptionFormat = org.gradle.api.tasks.testing.logging.TestExceptionFormat.FULL
         }
 
         systemProperty("idea.test.execution.policy", "org.nixos.idea.NixTestExecutionPolicy")
