@@ -1,6 +1,5 @@
 package org.nixos.idea.flake.build
 
-import com.intellij.build.BuildViewManager
 import com.intellij.build.events.FailureResult
 import com.intellij.build.events.SuccessResult
 import com.intellij.openapi.Disposable
@@ -22,7 +21,6 @@ import org.nixos.idea._testutil.WithIdeaPlatform
 import org.nixos.idea.flake.NixFlakeGcRoots
 import org.nixos.idea.flake.NixFlakeTestFixture
 import java.nio.file.Path
-import java.util.concurrent.TimeUnit
 
 @WithIdeaPlatform.HeavyProject
 internal class NixFlakeBuildServiceTest {
@@ -33,7 +31,7 @@ internal class NixFlakeBuildServiceTest {
     @BeforeEach
     fun setUp(project: Project, disposable: Disposable) {
         fixture = NixFlakeTestFixture(project, disposable)
-        events = fixture.recordEvents(BuildViewManager::class.java)
+        events = fixture.recordBuildEvents()
     }
 
     @AfterEach
@@ -119,7 +117,7 @@ internal class NixFlakeBuildServiceTest {
         fixture.nix.onPrefix("eval", "--json", stdout = """["default"]""")
         fixture.nix.onPrefix("build", stdout = "")
 
-        val result = ProjectTaskManager.getInstance(fixture.project).buildAllModules().blockingGet(60, TimeUnit.SECONDS)
+        val result = fixture.await(ProjectTaskManager.getInstance(fixture.project).buildAllModules())
 
         assertNotNull(result)
         assertFalse(result!!.hasErrors())
@@ -130,6 +128,6 @@ internal class NixFlakeBuildServiceTest {
     private fun build(vararg flakeRoots: String): ProjectTaskRunner.Result? {
         val promise = AsyncPromise<ProjectTaskRunner.Result>()
         NixFlakeBuildService.getInstance(fixture.project).build(flakeRoots.toList(), promise)
-        return promise.blockingGet(60, TimeUnit.SECONDS)
+        return fixture.await(promise)
     }
 }

@@ -1,26 +1,36 @@
 package org.nixos.idea.flake
 
 import com.google.gson.JsonObject
-import com.intellij.build.AbstractViewManager
 import com.intellij.build.BuildProgressListener
+import com.intellij.build.BuildViewManager
+import com.intellij.build.SyncViewManager
 import com.intellij.build.events.BuildEvent
 import com.intellij.build.events.EventResult
 import com.intellij.build.events.FinishBuildEvent
 import com.intellij.build.events.FinishEvent
 import com.intellij.build.events.OutputBuildEvent
+import com.intellij.diagnostic.ThreadDumper
 import com.intellij.ide.trustedProjects.TrustedProjects
 import com.intellij.openapi.Disposable
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.util.Disposer
 import com.intellij.openapi.util.io.FileUtil
 import com.intellij.openapi.util.io.NioFiles
+import com.intellij.testFramework.replaceService
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.async
 import kotlinx.coroutines.runBlocking
-import kotlinx.coroutines.withTimeout
+import kotlinx.coroutines.withTimeoutOrNull
+import org.jetbrains.concurrency.Promise
 import org.nixos.idea.flake.sync.NixFlakeSyncService
 import org.junit.jupiter.api.Assertions.assertEquals
 import java.nio.file.Files
 import java.nio.file.Path
 import java.util.concurrent.CopyOnWriteArrayList
+import java.util.concurrent.TimeUnit
+import java.util.concurrent.TimeoutException
+import kotlin.time.Duration
 import kotlin.time.Duration.Companion.seconds
 
 /**
@@ -87,15 +97,49 @@ internal class NixFlakeTestFixture(val project: Project, private val disposable:
         nix.onPrefix("eval", "--impure", "--raw", "--expr", "builtins.currentSystem", stdout = system)
     }
 
-    fun sync(flakeRoot: String, explicit: Boolean = true) = runBlocking {
-        withTimeout(60.seconds) {
-            NixFlakeSyncService.getInstance(project).sync(flakeRoot, explicit)
-        }
+    fun sync(flakeRoot: String, explicit: Boolean = true) = runWithTimeout {
+        NixFlakeSyncService.getInstance(project).sync(flakeRoot, explicit)
     }
 
-    /** Records the events of the given view (`BuildViewManager` for builds, `SyncViewManager` for imports). */
-    fun recordEvents(viewManager: Class<out AbstractViewManager>): BuildEventRecorder =
-        BuildEventRecorder().also { project.getService(viewManager).addListener(it, disposable) }
+    /**
+     * Runs [block] on a background thread and waits for it. On timeout, the test fails with a thread dump,
+     * so a test which hangs in CI shows where it hangs instead of blocking the build.
+     */
+    fun <T> runWithTimeout(timeout: Duration = 60.seconds, block: suspend () -> T): T {
+        val deferred = CoroutineScope(Dispatchers.Default).async { block() }
+        val completed = runBlocking { withTimeoutOrNull(timeout) { deferred.await(); true } } ?: false
+        if (!completed) {
+            val dump = ThreadDumper.dumpThreadsToString()
+            deferred.cancel()
+            throw AssertionError("Timed out after $timeout\n$dump")
+        }
+        return runBlocking { deferred.await() }
+    }
+
+    /** Waits for [promise] like [runWithTimeout]. */
+    fun <T> await(promise: Promise<T>, timeout: Duration = 60.seconds): T? = try {
+        promise.blockingGet(timeout.inWholeMilliseconds.toInt(), TimeUnit.MILLISECONDS)
+    }
+    catch (e: TimeoutException) {
+        throw AssertionError("Timed out after $timeout\n${ThreadDumper.dumpThreadsToString()}", e)
+    }
+
+    /**
+     * Records the events of the Build view ("Build" tab), which shows builds.
+     * The platform replaces the view by a dummy without listeners in tests, so the recorder replaces the dummy.
+     */
+    fun recordBuildEvents(): BuildEventRecorder = BuildEventRecorder().also { recorder ->
+        project.replaceService(BuildViewManager::class.java, object : BuildViewManager(project) {
+            override fun onEvent(buildId: Any, event: BuildEvent) = recorder.onEvent(buildId, event)
+        }, disposable)
+    }
+
+    /** Records the events of the Sync view ("Sync" tab), which shows imports. See [recordBuildEvents]. */
+    fun recordSyncEvents(): BuildEventRecorder = BuildEventRecorder().also { recorder ->
+        project.replaceService(SyncViewManager::class.java, object : SyncViewManager(project) {
+            override fun onEvent(buildId: Any, event: BuildEvent) = recorder.onEvent(buildId, event)
+        }, disposable)
+    }
 
     fun assertNoUnexpectedNixCalls() {
         assertEquals(emptyList<FakeNixCommand.Call>(), nix.unexpectedCalls, "nix calls without an answer")

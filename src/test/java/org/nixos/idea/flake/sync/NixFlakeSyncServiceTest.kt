@@ -1,6 +1,5 @@
 package org.nixos.idea.flake.sync
 
-import com.intellij.build.SyncViewManager
 import com.intellij.build.events.FailureResult
 import com.intellij.build.events.SkippedResult
 import com.intellij.build.events.SuccessResult
@@ -19,12 +18,10 @@ import com.intellij.platform.workspace.jps.entities.ModuleEntity
 import com.intellij.platform.workspace.jps.entities.ModuleId
 import com.intellij.workspaceModel.ide.NonPersistentEntitySource
 import kotlinx.coroutines.CompletableDeferred
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.awaitCancellation
 import kotlinx.coroutines.cancelAndJoin
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.runBlocking
-import kotlinx.coroutines.withTimeout
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertInstanceOf
@@ -41,7 +38,6 @@ import org.nixos.idea.flake.model.NixFlakeImportState
 import org.nixos.idea.flake.model.NixFlakeInputsRootsProvider
 import org.nixos.idea.flake.model.NixFlakeWorkspaceModel
 import java.util.concurrent.CopyOnWriteArrayList
-import kotlin.time.Duration.Companion.seconds
 
 @WithIdeaPlatform.HeavyProject
 internal class NixFlakeSyncServiceTest {
@@ -55,7 +51,7 @@ internal class NixFlakeSyncServiceTest {
     @BeforeEach
     fun setUp(project: Project, disposable: Disposable) {
         fixture = NixFlakeTestFixture(project, disposable)
-        events = fixture.recordEvents(SyncViewManager::class.java)
+        events = fixture.recordSyncEvents()
         project.messageBus.connect(disposable).subscribe(NixFlakeSyncService.TOPIC, object : NixFlakeSyncService.Listener {
             override fun syncFinished(flakeRoot: String, success: Boolean) {
                 finished.add(flakeRoot to success)
@@ -183,7 +179,7 @@ internal class NixFlakeSyncServiceTest {
     fun `uses another module name if the name is taken`() {
         val root = fixture.createFlake("app")
         fixture.stubSync(root)
-        runBlocking {
+        fixture.runWithTimeout {
             project.workspaceModel.update("Add module of another build system") { storage ->
                 storage.addEntity(ModuleEntity("nix-flake.app", emptyList(), NonPersistentEntitySource))
             }
@@ -205,7 +201,7 @@ internal class NixFlakeSyncServiceTest {
         fixture.stubSync(root, inputs = mapOf("nixpkgs" to Input(nixpkgs)))
         fixture.sync(root)
 
-        runBlocking { NixFlakeWorkspaceModel.removeFlake(project, root) }
+        fixture.runWithTimeout { NixFlakeWorkspaceModel.removeFlake(project, root) }
 
         assertNull(NixFlakeWorkspaceModel.findModule(project, root))
         assertNull(NixFlakeImportState.getInstance(project).getFlake(root))
@@ -249,10 +245,12 @@ internal class NixFlakeSyncServiceTest {
             awaitCancellation()
         }
 
-        runBlocking {
-            val job = launch(Dispatchers.Default) { NixFlakeSyncService.getInstance(project).sync(root, true) }
-            withTimeout(30.seconds) { started.await() }
-            job.cancelAndJoin()
+        fixture.runWithTimeout {
+            coroutineScope {
+                val job = launch { NixFlakeSyncService.getInstance(project).sync(root, true) }
+                started.await()
+                job.cancelAndJoin()
+            }
         }
 
         assertEquals(listOf(root to false), finished)

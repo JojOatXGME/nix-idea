@@ -240,6 +240,13 @@ tasks {
             excludeTags("mock")
         }
 
+        // Print the message and stack trace of failing tests to the console, so failures in CI can be analyzed
+        // without downloading the test reports.
+        testLogging {
+            events("failed")
+            exceptionFormat = org.gradle.api.tasks.testing.logging.TestExceptionFormat.FULL
+        }
+
         systemProperty("idea.test.execution.policy", "org.nixos.idea.NixTestExecutionPolicy")
         systemProperty("plugin.testDataPath", testDataPath)
 
