@@ -64,6 +64,19 @@ public @interface WithIdeaPlatform {
     @interface OnEdt {}
 
     /**
+     * Creates a new, directory-based project for each test (a "heavy" project), instead of reusing a shared light project.
+     * Use it for tests which change the project model, e.g. add modules, as these changes would leak into other tests
+     * with the light project. The project starts without modules. It is slower than the light project.
+     * Cannot be combined with {@link CodeInsight}.
+     * This annotation inherits {@link WithIdeaPlatform}, so you don't have to add it separately.
+     */
+    @Retention(RetentionPolicy.RUNTIME)
+    @Target({ElementType.ANNOTATION_TYPE, ElementType.METHOD, ElementType.TYPE})
+    @Inherited
+    @WithIdeaPlatform
+    @interface HeavyProject {}
+
+    /**
      * Enables the use of {@link CodeInsightTestFixture}.
      * This annotation inherits {@link WithIdeaPlatform}, so you don't have to add it separately.
      */

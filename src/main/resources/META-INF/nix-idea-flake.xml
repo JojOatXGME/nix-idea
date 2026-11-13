@@ -2,6 +2,11 @@
     <!-- Nix Flake import. See org.nixos.idea.flake.NixFlakeConstants for an overview. -->
     <extensions defaultExtensionNs="com.intellij">
 
+        <!-- Runs `nix`. A service, so tests can replace it with a fake. -->
+        <applicationService
+                serviceInterface="org.nixos.idea.flake.sync.NixCommand"
+                serviceImplementation="org.nixos.idea.flake.sync.NixProcessCommand"/>
+
         <!-- Detect flake.nix: notification with "Load", or auto-import when opening a project with an empty model. -->
         <externalSystemUnlinkedProjectAware
                 implementation="org.nixos.idea.flake.NixFlakeUnlinkedProjectAware"/>

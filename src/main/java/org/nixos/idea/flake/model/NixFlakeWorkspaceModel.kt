@@ -30,8 +30,9 @@ import java.nio.file.Path
  * root only if no other module has one would make the result depend on the import order.
  * Symlinks into the store (`result`) are excluded for all modules by [NixStoreSymlinkExcluder] instead.
  *
- * TODO: A flake outside of the project's content roots isn't project content then (no search, no indexing of its
- *  files). Could be solved with a content root which is only added if no other module contains the directory.
+ * Known limitation: a flake outside of all content roots (e.g. linked from outside the project directory) is not
+ * project content. Its files are not shown in the Project view and not covered by the "Project Files" scope.
+ * Adding a content root only in this case would create two kinds of modules depending on the directory layout.
  *
  * Entity source: modules use [JpsImportedEntitySource] with `externalSystemId = NIX_FLAKE`
  * (created via [LegacyBridgeJpsEntitySourceFactory]), like Maven's `WorkspaceProjectImporter`.

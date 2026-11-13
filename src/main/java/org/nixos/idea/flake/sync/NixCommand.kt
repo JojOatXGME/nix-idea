@@ -7,6 +7,7 @@ import com.intellij.execution.process.OSProcessHandler
 import com.intellij.execution.process.ProcessEvent
 import com.intellij.execution.process.ProcessListener
 import com.intellij.execution.process.ProcessOutputType
+import com.intellij.openapi.components.service
 import com.intellij.openapi.util.Key
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ensureActive
@@ -17,33 +18,53 @@ import java.nio.file.Path
 /**
  * Runs `nix` and streams stderr (where nix writes its progress and errors) into a step of the Build tool window.
  *
+ * This is an application service, so tests can replace it with a fake which doesn't start processes
+ * (see `FakeNixCommand` in the tests). Production code calls the [Companion.run] shortcut.
+ *
  * TODO: Map well-known nix errors (missing `flake.lock`, syntax errors with position, untracked files in git,
  *  `nix` missing or too old for flakes) to BuildIssue/FileMessageEvent, so the Sync view can navigate to
  *  `flake.nix:line:column` and offer quick fixes. Error records of the JSON log (see below) contain `file`, `line`
  *  and `column`. There is intentionally no separate up-front version check.
  */
-internal object NixCommand {
-
-    private val COMMON_ARGS = listOf(
-        "--extra-experimental-features", "nix-command flakes",
-        // TODO: Structured logs. `--log-format internal-json` replaces the human-readable stderr by JSON records
-        //  (start/stop of activities like builds and downloads, build log lines per activity, messages with positions).
-        //  The format is not formally specified ("internal"), so it may change between Nix versions.
-        //  Since Nix 2.30, `--json-log-path <file or unix socket>` writes a *copy* of the log as JSON while stderr
-        //  stays human-readable. Plan: keep forwarding stderr to the step node (works with every Nix version), and
-        //  additionally parse the JSON copy, if available, to create child nodes per activity. If parsing fails,
-        //  stop creating child nodes, but keep the plain log.
-    )
-
-    class NixCommandException(val exitCode: Int, message: String) : Exception(message)
+internal interface NixCommand {
 
     /**
      * Runs `nix <args>` in [workDir] and returns stdout. stderr is forwarded to [step].
      * The process is destroyed when the calling coroutine is cancelled.
      *
-     * Note: `BuildProgress.output(String, ProcessOutputType)` only exists in newer platform versions; 2025.2 has the boolean overload.
+     * @throws NixCommandException if `nix` exits with a non-zero exit code.
      */
-    suspend fun run(step: BuildProgress<BuildProgressDescriptor>, workDir: Path, vararg args: String): String {
+    suspend fun run(step: BuildProgress<BuildProgressDescriptor>, workDir: Path, args: List<String>): String
+
+    class NixCommandException(val exitCode: Int, message: String) : Exception(message)
+
+    companion object {
+        @JvmStatic
+        fun getInstance(): NixCommand = service()
+
+        suspend fun run(step: BuildProgress<BuildProgressDescriptor>, workDir: Path, vararg args: String): String =
+            getInstance().run(step, workDir, args.toList())
+    }
+}
+
+/** Implementation of [NixCommand] which starts the `nix` executable. */
+internal class NixProcessCommand : NixCommand {
+
+    private companion object {
+        val COMMON_ARGS = listOf(
+            "--extra-experimental-features", "nix-command flakes",
+            // TODO: Structured logs. `--log-format internal-json` replaces the human-readable stderr by JSON records
+            //  (start/stop of activities like builds and downloads, build log lines per activity, messages with positions).
+            //  The format is not formally specified ("internal"), so it may change between Nix versions.
+            //  Since Nix 2.30, `--json-log-path <file or unix socket>` writes a *copy* of the log as JSON while stderr
+            //  stays human-readable. Plan: keep forwarding stderr to the step node (works with every Nix version), and
+            //  additionally parse the JSON copy, if available, to create child nodes per activity. If parsing fails,
+            //  stop creating child nodes, but keep the plain log.
+        )
+    }
+
+    // Note: `BuildProgress.output(String, ProcessOutputType)` only exists in newer platform versions; 2025.2 has the boolean overload.
+    override suspend fun run(step: BuildProgress<BuildProgressDescriptor>, workDir: Path, args: List<String>): String {
         val commandLine = GeneralCommandLine(listOf(NixExecutable.resolve()) + COMMON_ARGS + args)
             .withWorkingDirectory(workDir)
             .withParentEnvironmentType(GeneralCommandLine.ParentEnvironmentType.CONSOLE)
@@ -80,7 +101,7 @@ internal object NixCommand {
             }
             val exitCode = handler.exitCode ?: -1
             if (exitCode != 0) {
-                throw NixCommandException(exitCode, "nix ${args.firstOrNull().orEmpty()} failed with exit code $exitCode")
+                throw NixCommand.NixCommandException(exitCode, "nix ${args.firstOrNull().orEmpty()} failed with exit code $exitCode")
             }
             stdout.toString()
         }

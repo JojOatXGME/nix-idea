@@ -102,7 +102,12 @@ final class IdeaPlatformExtension implements ParameterResolver, TestInstancePreC
         private FixtureClosableWrapper(ExtensionContext context) throws Exception {
             String testName = PlatformTestUtil.getTestName(context.getDisplayName(), false);
             IdeaTestFixtureFactory factory = IdeaTestFixtureFactory.getFixtureFactory();
-            IdeaProjectTestFixture baseFixture = factory.createLightFixtureBuilder(testName).getFixture();
+            boolean heavy = AnnotationSupport.findAnnotation(context.getTestMethod(), WithIdeaPlatform.HeavyProject.class)
+                    .or(() -> AnnotationSupport.findAnnotation(context.getRequiredTestClass(), WithIdeaPlatform.HeavyProject.class, context.getEnclosingTestClasses()))
+                    .isPresent();
+            IdeaProjectTestFixture baseFixture = heavy
+                    ? factory.createFixtureBuilder(testName, true).getFixture()
+                    : factory.createLightFixtureBuilder(testName).getFixture();
             myFixture = AnnotationSupport.findAnnotation(context.getTestMethod(), WithIdeaPlatform.CodeInsight.class)
                     .or(() -> AnnotationSupport.findAnnotation(context.getRequiredTestClass(), WithIdeaPlatform.CodeInsight.class, context.getEnclosingTestClasses()))
                     .<IdeaProjectTestFixture>map(annotation -> {
